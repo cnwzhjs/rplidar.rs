@@ -1,0 +1,11 @@
+[package]
+name = "ultra_simple"
+version = "0.1.0"
+authors = ["Tony Huang <tony@slamtec.com>"]
+edition = "2018"
+
+[dependencies]
+rplidar_drv = { path = "../../rplidar_drv" }
+rpos_drv = { path = "../../rpos_drv" }
+serialport = "3.1.0"
+hex-slice = "0.1.4"

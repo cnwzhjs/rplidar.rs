@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "rpos_drv",
+    "rplidar_drv",
+    "examples/ultra_simple"
+]

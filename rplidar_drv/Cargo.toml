@@ -1,0 +1,13 @@
+[package]
+name = "rplidar_drv"
+description = "Driver for Slamtec RPLIDAR series laser sensors"
+version = "0.1.0"
+license = "BSD"
+repository = "https://github.com/cnwzhjs/rplidar.rs/rplidar_drv"
+keywords = ["Slamtec", "Rplidar", "Driver"]
+authors = ["Tony Huang <tony@slamtec.com>"]
+edition = "2018"
+
+[dependencies]
+rpos_drv = { path = "../rpos_drv" }
+byteorder = "1.2.7"

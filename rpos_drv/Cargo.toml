@@ -1,0 +1,9 @@
+[package]
+name = "rpos_drv"
+description = "Fundamentals for Slamtec device drivers"
+version = "0.1.0"
+license = "BSD"
+repository = "https://github.com/cnwzhjs/rplidar.rs/rpos_drv"
+keywords = ["Slamtec", "Driver"]
+authors = ["Tony Huang <tony@slamtec.com>"]
+edition = "2018"
