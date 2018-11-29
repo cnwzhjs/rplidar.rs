@@ -15,6 +15,7 @@ mod protocol;
 pub use self::prelude::*;
 
 pub use self::answers::RplidarResponseDeviceInfo;
+
 use self::answers::*;
 use self::capsuled_parser::parse_capsuled;
 use self::checksum::Checksum;
@@ -25,16 +26,24 @@ use rpos_drv::{Channel, Error, ErrorKind, Message, Result};
 use std::collections::VecDeque;
 use std::io::{Read, Write};
 use std::mem::transmute_copy;
-use std::time::Duration;
+use std::time::{ Instant, Duration };
 
 const RPLIDAR_DEFAULT_TIMEOUT: Duration = Duration::from_secs(1);
 const RPLIDAR_DEFAULT_CACHE_DEPTH: usize = 8192;
+const RPLIDAR_DEFAULT_MOTOR_PWM: u16 = 600;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum CachedPrevCapsule {
     None,
     Capsuled(RplidarResponseCapsuleMeasurementNodes),
     UltraCapsuled(RplidarResponseUltraCapsuleMeasurementNodes),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum Health {
+    Healthy,
+    Warning(u16),
+    Error(u16)
 }
 
 /// Rplidar device driver
@@ -161,6 +170,16 @@ where
             .write(&Message::with_data(RPLIDAR_CMD_SET_MOTOR_PWM, &payload))?;
 
         return Ok(());
+    }
+
+    /// stop motor
+    pub fn stop_motor(&mut self) -> Result<()> {
+        self.set_motor_pwm(0)
+    }
+
+    /// start motor
+    pub fn start_motor(&mut self) -> Result<()> {
+        self.set_motor_pwm(RPLIDAR_DEFAULT_MOTOR_PWM)
     }
 
     /// get lidar config
@@ -517,6 +536,72 @@ where
         }
 
         return Ok(self.cached_measurement_nodes.pop_front().unwrap());
+    }
+
+    /// read scan frame
+    pub fn grab_scan(&mut self) -> Result<Vec<ScanPoint>> {
+        self.grab_scan_with_timeout(RPLIDAR_DEFAULT_TIMEOUT * 5)
+    }
+
+    /// read scan frame
+    pub fn grab_scan_with_timeout(&mut self, timeout: Duration) -> Result<Vec<ScanPoint>> {
+        let deadline = Instant::now() + timeout;
+        let mut end = 1;
+
+        'outter_loop: loop {
+            if Instant::now() > deadline {
+                return Err(Error::new(ErrorKind::OperationTimeout, "operation timeout"));
+            }
+
+            if self.cached_measurement_nodes.len() <= end {
+                self.wait_scan_data_with_timeout(std::cmp::min(deadline - Instant::now(), RPLIDAR_DEFAULT_TIMEOUT))?;
+            }
+
+            for i in end..self.cached_measurement_nodes.len() {
+                if self.cached_measurement_nodes[i].is_sync() {
+                    end = i;
+                    break 'outter_loop;
+                }
+            }
+
+            end = self.cached_measurement_nodes.len();
+        }
+
+        let mut out = Vec::<ScanPoint>::with_capacity(end);
+        for _ in 0..end {
+            if let Some(point) = self.cached_measurement_nodes.pop_front() {
+                out.push(point);
+            }
+        }
+        
+        return Ok(out);
+    }
+
+    /// Get LIDAR health information
+    pub fn get_device_health(&mut self) -> Result<Health> {
+        self.get_device_health_with_timeout(RPLIDAR_DEFAULT_TIMEOUT)
+    }
+
+    /// Get LIDAR health information
+    pub fn get_device_health_with_timeout(
+        &mut self,
+        timeout: Duration,
+    ) -> Result<Health> {
+        if let Some(msg) = self
+            .channel
+            .invoke(&Message::new(RPLIDAR_CMD_GET_DEVICE_HEALTH), timeout)?
+        {
+            let resp = handle_resp!(RPLIDAR_ANS_TYPE_DEVHEALTH, msg, RplidarResponseDeviceHealth)?;
+
+            return Ok(match resp.status {
+                RPLIDAR_HEALTH_STATUS_OK => Health::Healthy,
+                RPLIDAR_HEALTH_STATUS_WARNING => Health::Warning(resp.error_code),
+                RPLIDAR_HEALTH_STATUS_ERROR => Health::Error(resp.error_code),
+                _ => Health::Healthy
+            });
+        }
+
+        return Err(Error::new(ErrorKind::OperationTimeout, "operation timeout"));
     }
 }
 

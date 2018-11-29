@@ -6,14 +6,14 @@
 | -------------------------------------- | ------------ |
 | feature - get_all_supported_scan_modes | since 0.1.0  |
 | feature - start_scan                   | since 0.1.0  |
-| feature - get_health                   | No           |
+| feature - get_device_health            | since 0.2.0  |
 | feature - get_device_info              | since 0.1.0  |
 | feature - set_motor_pwm                | since 0.1.0  |
-| feature - stop_motor                   | No           |
-| feature - start_motor                  | No           |
+| feature - stop_motor                   | since 0.2.0  |
+| feature - start_motor                  | since 0.2.0  |
 | feature - check_motor_ctrl_support     | No           |
 | feature - stop                         | since 0.1.0  |
-| feature - grab_scan                    | No           |
+| feature - grab_scan                    | since 0.2.0  |
 | feature - grab_scan_point              | since 0.1.0  |
 | feature - sort_scan                    | No           |
 | protocol - measurement_nodes           | since 0.1.0  |
@@ -28,7 +28,7 @@
 ### v0.2.0
 
 * **Scheduled at:** 2 Dec 2018
-* feature - get_health
+* feature - get_device_health
 * feature - stop_motor
 * feature - start_motor
 * feature - grab_scan

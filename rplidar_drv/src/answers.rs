@@ -27,6 +27,11 @@ pub const RPLIDAR_RESP_MEASUREMENT_ANGLE_SHIFT : usize = 1;
 pub const RPLIDAR_RESP_MEASUREMENT_EXP_SYNC_1 : u8 = 0xA;
 pub const RPLIDAR_RESP_MEASUREMENT_EXP_SYNC_2 : u8 = 0x5;
 
+// health status
+pub const RPLIDAR_HEALTH_STATUS_OK : u8 = 0;
+pub const RPLIDAR_HEALTH_STATUS_WARNING : u8 = 1;
+pub const RPLIDAR_HEALTH_STATUS_ERROR : u8 = 2;
+
 /// Rplidar device info data strcture
 #[derive(Debug, Clone, PartialEq)]
 #[repr(packed)]
@@ -84,4 +89,12 @@ pub struct RplidarResponseMeasurementNodeHq {
     pub dist_mm_q2: u32,
     pub quality: u8,
     pub flag: u8,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+#[repr(packed)]
+#[repr(C)]
+pub struct RplidarResponseDeviceHealth {
+    pub status: u8,
+    pub error_code: u16
 }

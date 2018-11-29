@@ -1,12 +1,12 @@
+extern crate hex_slice;
 extern crate rplidar_drv;
 extern crate rpos_drv;
 extern crate serialport;
-extern crate hex_slice;
 
 use hex_slice::AsHex;
 
-use rplidar_drv::{RplidarDevice, RplidarProtocol, ScanOptions};
-use rpos_drv::{ ErrorKind, Channel };
+use rplidar_drv::{Health, RplidarDevice, RplidarProtocol};
+use rpos_drv::{Channel, ErrorKind};
 use serialport::prelude::*;
 use std::time::Duration;
 
@@ -34,7 +34,8 @@ fn main() {
     let mut serial_port =
         serialport::open_with_settings(serial_port, &s).expect("failed to open serial port");
 
-    serial_port.write_data_terminal_ready(false)
+    serial_port
+        .write_data_terminal_ready(false)
         .expect("failed to clear DTR");
 
     let channel = Channel::<RplidarProtocol, serialport::SerialPort>::new(
@@ -56,12 +57,31 @@ fn main() {
         device_info.firmware_version & 0xff
     );
     println!("    Hardware Version: {}", device_info.hardware_version);
-    println!("    Serial Number: {:02X}", device_info.serialnum.plain_hex(false));
+    println!(
+        "    Serial Number: {:02X}",
+        device_info.serialnum.plain_hex(false)
+    );
+
+    let device_health = rplidar
+        .get_device_health()
+        .expect("failed to get device health");
+
+    match device_health {
+        Health::Healthy => {
+            println!("LIDAR is healthy.");
+        }
+        Health::Warning(error_code) => {
+            println!("LIDAR is unhealthy, warn: {:04X}", error_code);
+        }
+        Health::Error(error_code) => {
+            println!("LIDAR is unhealthy, error: {:04X}", error_code);
+        }
+    }
 
     let all_supported_scan_modes = rplidar
         .get_all_supported_scan_modes()
         .expect("failed to get all supported scan modes");
-    
+
     println!("All supported scan modes:");
     for scan_mode in all_supported_scan_modes {
         println!(
@@ -80,19 +100,31 @@ fn main() {
 
     println!("Typical scan mode: {}", typical_scan_mode);
 
-    rplidar.set_motor_pwm(600)
-        .expect("failed to start motor");
+    rplidar.set_motor_pwm(600).expect("failed to start motor");
 
     println!("Starting LIDAR in typical mode...");
 
-    let actual_mode = rplidar.start_scan()
+    let actual_mode = rplidar
+        .start_scan()
         .expect("failed to start scan in standard mode");
-    
+
     println!("Started scan in mode `{}`", actual_mode.name);
 
     loop {
-        match rplidar.grab_scan_point() {
-            Ok(scan_point) => println!("Angle: {:5.2}, Distance: {:8.4}, Valid: {:5}, Sync: {:5}", scan_point.angle(), scan_point.distance(), scan_point.is_valid(), scan_point.is_sync()),
+        match rplidar.grab_scan() {
+            Ok(scan) => {
+                println!("{} points per scan", scan.len());
+
+                for scan_point in scan {
+                    println!(
+                        "    Angle: {:5.2}, Distance: {:8.4}, Valid: {:5}, Sync: {:5}",
+                        scan_point.angle(),
+                        scan_point.distance(),
+                        scan_point.is_valid(),
+                        scan_point.is_sync()
+                    )
+                }
+            }
             Err(err) => {
                 if err.kind() == ErrorKind::OperationTimeout {
                     continue;
