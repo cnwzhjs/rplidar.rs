@@ -7,6 +7,7 @@ extern crate rpos_drv;
 
 mod answers;
 mod capsuled_parser;
+mod ultra_capsuled_parser;
 mod checksum;
 mod cmds;
 mod prelude;
@@ -18,6 +19,7 @@ pub use self::answers::RplidarResponseDeviceInfo;
 
 use self::answers::*;
 use self::capsuled_parser::parse_capsuled;
+use self::ultra_capsuled_parser::parse_ultra_capsuled;
 use self::checksum::Checksum;
 use self::cmds::*;
 pub use self::protocol::RplidarProtocol;
@@ -483,11 +485,11 @@ where
         &mut self,
         nodes: RplidarResponseUltraCapsuleMeasurementNodes,
     ) {
-        match &self.cached_prev_capsule {
-            CachedPrevCapsule::UltraCapsuled(prev_ultra_capsule) => {
-                // TODO
-            }
-            _ => self.cached_prev_capsule = CachedPrevCapsule::UltraCapsuled(nodes),
+        let (parsed_nodes, new_cached_capsuled) = parse_ultra_capsuled(&self.cached_prev_capsule, nodes);
+        self.cached_prev_capsule = new_cached_capsuled;
+
+        for node in parsed_nodes {
+            self.on_measurement_node_hq(node);
         }
     }
 
@@ -504,9 +506,7 @@ where
                     self.on_measurement_node_hq(parse_resp!(msg, RplidarResponseMeasurementNodeHq)?)
                 }
                 RPLIDAR_ANS_TYPE_MEASUREMENT_CAPSULED => self.on_measurement_capsuled_msg(&msg)?,
-                RPLIDAR_ANS_TYPE_MEASUREMENT_CAPSULED_ULTRA => {
-                    self.on_measurement_ultra_capsuled_msg(&msg)?
-                }
+                RPLIDAR_ANS_TYPE_MEASUREMENT_CAPSULED_ULTRA => self.on_measurement_ultra_capsuled_msg(&msg)?,
                 _ => {
                     return Err(Error::new(ErrorKind::ProtocolError, "unexpected response"));
                 }
@@ -573,7 +573,7 @@ where
                 out.push(point);
             }
         }
-        
+
         return Ok(out);
     }
 

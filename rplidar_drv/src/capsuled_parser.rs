@@ -8,7 +8,7 @@ fn get_start_angle_q8(nodes: &RplidarResponseCapsuleMeasurementNodes) -> u32 {
     return ((nodes.start_angle_sync_q6 & 0x7fffu16) as u32) << 2;
 }
 
-fn angle_diff_q8(prev_q8: u32, cur_q8: u32) -> u32 {
+pub fn angle_diff_q8(prev_q8: u32, cur_q8: u32) -> u32 {
     if prev_q8 > cur_q8 {
         ANGLE_360_Q8 + cur_q8 - prev_q8
     } else {
@@ -16,8 +16,8 @@ fn angle_diff_q8(prev_q8: u32, cur_q8: u32) -> u32 {
     }
 }
 
-struct ParsedNode {
-    pub dist_q2: u16,
+pub struct ParsedNode {
+    pub dist_q2: u32,
     pub angle_offset_q3: u32
 }
 
@@ -32,17 +32,17 @@ fn parse_cabin(cabin:&RplidarResponseCabinNodes) -> [ParsedNode;2] {
 
     return [
         ParsedNode {
-            dist_q2: dist_q2_1,
+            dist_q2: dist_q2_1 as u32,
             angle_offset_q3: angle_offset_q3_1 as u32
         },
         ParsedNode {
-            dist_q2: dist_q2_2,
+            dist_q2: dist_q2_2 as u32,
             angle_offset_q3: angle_offset_q3_2 as u32
         },
     ]
 }
 
-fn check_sync(cur_angle_q16: u32, angle_inc_q16: u32) -> bool {
+pub fn check_sync(cur_angle_q16: u32, angle_inc_q16: u32) -> bool {
     ((cur_angle_q16 + angle_inc_q16) % ANGLE_360_Q16) < angle_inc_q16
 }
 
@@ -50,7 +50,7 @@ fn angle_q6_to_angle_z_q14(angle_q6: u32) -> u16 {
     ((angle_q6 << 8) / 90) as u16
 }
 
-fn generate_quality(dist_q2: u16) -> u8 {
+pub fn generate_quality(dist_q2: u32) -> u8 {
     if dist_q2 != 0 {
         (0x2fu8 << RPLIDAR_RESP_MEASUREMENT_QUALITY_SHIFT)
     } else {
@@ -58,11 +58,11 @@ fn generate_quality(dist_q2: u16) -> u8 {
     }
 }
 
-fn generate_flag(sync: bool) -> u8 {
+pub fn generate_flag(sync: bool) -> u8 {
     if sync { 1u8 } else { 0u8 }
 }
 
-fn to_hq(node: &ParsedNode, cur_angle_raw_q16: u32, angle_inc_q16: u32) -> RplidarResponseMeasurementNodeHq {
+pub fn to_hq(node: &ParsedNode, cur_angle_raw_q16: u32, angle_inc_q16: u32) -> RplidarResponseMeasurementNodeHq {
     let angle_q6 = cur_angle_raw_q16 - ((node.angle_offset_q3 << 13) >> 10);
     let sync = check_sync(cur_angle_raw_q16, angle_inc_q16);
 

@@ -16,6 +16,7 @@ Please see [Roadmap](https://github.com/cnwzhjs/rplidar.rs/blob/master/docs/Road
 
 ## Release Notes
 
+* [v0.3.0](https://github.com/cnwzhjs/rplidar.rs/blob/master/docs/ReleaseNote.v0.3.0.md)
 * [v0.2.0](https://github.com/cnwzhjs/rplidar.rs/blob/master/docs/ReleaseNote.v0.2.0.md)
 * [v0.1.0](https://github.com/cnwzhjs/rplidar.rs/blob/master/docs/ReleaseNote.v0.1.0.md)
 
@@ -27,7 +28,7 @@ RPLIDAR SDK supports Windows, macOS and Linux by using Visual Studio 2010 projec
 | ---------------------- | ------- | ----- | ------- |
 | A1                     | Yes     | Yes   | Yes     |
 | A2                     | Yes     | Yes   | Yes     |
-| A3                     | Partial | No    | Partial |
+| A3                     | Yes     | No    | Yes     |
 
 ## Quick Start
 

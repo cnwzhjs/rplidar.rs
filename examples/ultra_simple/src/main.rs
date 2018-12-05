@@ -15,15 +15,19 @@ use std::env;
 fn main() {
     let args: Vec<String> = env::args().collect();
 
-    if args.len() != 2 {
-        println!("Usage: {} <serial_port>", args[0]);
+    if args.len() < 2 || args.len() > 3 {
+        println!("Usage: {} <serial_port> [baudrate]", args[0]);
+        println!("    baudrate defaults to 115200");
         return;
     }
 
     let serial_port = &args[1];
+    let baud_rate = args.get(2).unwrap_or(&String::from("115200"))
+        .parse::<u32>()
+        .expect("Invalid value for baudrate");
 
     let s = SerialPortSettings {
-        baud_rate: 115200,
+        baud_rate: baud_rate,
         data_bits: DataBits::Eight,
         flow_control: FlowControl::None,
         parity: Parity::None,
@@ -110,12 +114,15 @@ fn main() {
 
     println!("Started scan in mode `{}`", actual_mode.name);
 
+    let start_time = std::time::Instant::now();
+
     loop {
         match rplidar.grab_scan() {
             Ok(scan) => {
-                println!("{} points per scan", scan.len());
+                println!("[{:6}s] {} points per scan", start_time.elapsed().as_secs(), scan.len());
 
-                for scan_point in scan {
+                /*
+                 for scan_point in scan {
                     println!(
                         "    Angle: {:5.2}, Distance: {:8.4}, Valid: {:5}, Sync: {:5}",
                         scan_point.angle(),
@@ -123,7 +130,7 @@ fn main() {
                         scan_point.is_valid(),
                         scan_point.is_sync()
                     )
-                }
+                }*/
             }
             Err(err) => {
                 if err.kind() == ErrorKind::OperationTimeout {

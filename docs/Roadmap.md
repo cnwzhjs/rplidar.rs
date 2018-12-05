@@ -18,7 +18,7 @@
 | feature - sort_scan                    | No           |
 | protocol - measurement_nodes           | since 0.1.0  |
 | protocol - capsuled_nodes              | since 0.1.0  |
-| protocol - ultra_capsuled_nodes        | No           |
+| protocol - ultra_capsuled_nodes        | since 0.3.0  |
 | protocol - hq_nodes                    | since 0.1.0  |
 | back compatibility - start_scan        | No           |
 | back compatibility - scan_modes        | No           |
@@ -28,6 +28,7 @@
 ### v0.2.0
 
 * **Scheduled at:** 2 Dec 2018
+* **Released at:** 29 Dec 2018
 * feature - get_device_health
 * feature - stop_motor
 * feature - start_motor
@@ -36,7 +37,8 @@
 ### v0.3.0
 
 * **Scheduled at:** 9 Dec 2018
-* protocol - hq_nodes
+* **Released at:** 5 Dec 2018
+* protocol - ultra_capsuled_nodes
 
 ### v0.4.0
 
