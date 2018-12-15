@@ -9,10 +9,12 @@ impl Checksum {
         Checksum { current: 0 }
     }
 
+    /*
     /// reset the calculation of `Checksum`
     pub fn reset(&mut self) {
         self.current = 0;
     }
+    */
 
     /// push data into the `Checksum`
     pub fn push(&mut self, data: u8) {

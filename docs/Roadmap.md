@@ -11,7 +11,7 @@
 | feature - set_motor_pwm                | since 0.1.0  |
 | feature - stop_motor                   | since 0.2.0  |
 | feature - start_motor                  | since 0.2.0  |
-| feature - check_motor_ctrl_support     | No           |
+| feature - check_motor_ctrl_support     | since 0.4.0  |
 | feature - stop                         | since 0.1.0  |
 | feature - grab_scan                    | since 0.2.0  |
 | feature - grab_scan_point              | since 0.1.0  |
@@ -19,9 +19,9 @@
 | protocol - measurement_nodes           | since 0.1.0  |
 | protocol - capsuled_nodes              | since 0.1.0  |
 | protocol - ultra_capsuled_nodes        | since 0.3.0  |
-| protocol - hq_nodes                    | since 0.1.0  |
-| back compatibility - start_scan        | No           |
-| back compatibility - scan_modes        | No           |
+| protocol - hq_nodes                    | since 0.4.0  |
+| back compatibility - start_scan        | since 0.4.0  |
+| back compatibility - scan_modes        | since 0.4.0  |
 
 ## Roadmap
 

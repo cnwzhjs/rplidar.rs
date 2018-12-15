@@ -3,8 +3,10 @@
 //! `rplidar_drv` is driver for Slamtec Rplidar series
 
 extern crate byteorder;
+extern crate crc;
 extern crate rpos_drv;
 
+mod internals;
 mod answers;
 mod capsuled_parser;
 mod ultra_capsuled_parser;
@@ -18,6 +20,7 @@ pub use self::prelude::*;
 pub use self::answers::RplidarResponseDeviceInfo;
 
 use self::answers::*;
+use self::internals::*;
 use self::capsuled_parser::parse_capsuled;
 use self::ultra_capsuled_parser::parse_ultra_capsuled;
 use self::checksum::Checksum;
@@ -29,24 +32,9 @@ use std::collections::VecDeque;
 use std::io::{Read, Write};
 use std::mem::transmute_copy;
 use std::time::{ Instant, Duration };
+use crc::{ crc32 };
 
-const RPLIDAR_DEFAULT_TIMEOUT: Duration = Duration::from_secs(1);
-const RPLIDAR_DEFAULT_CACHE_DEPTH: usize = 8192;
-const RPLIDAR_DEFAULT_MOTOR_PWM: u16 = 600;
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum CachedPrevCapsule {
-    None,
-    Capsuled(RplidarResponseCapsuleMeasurementNodes),
-    UltraCapsuled(RplidarResponseUltraCapsuleMeasurementNodes),
-}
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum Health {
-    Healthy,
-    Warning(u16),
-    Error(u16)
-}
+const RPLIDAR_GET_LIDAR_CONF_START_VERSION:u16 = ((1 << 8) | (24)) as u16;
 
 /// Rplidar device driver
 #[derive(Debug)]
@@ -103,13 +91,11 @@ where
     /// Construct a new RplidarDevice with channel
     ///
     /// # Example
-    /// ```rust
-    /// # use rpos_drv::{ Channel, RingByteBuffer };
-    /// # use std::io::{ Read, Write };
-    /// # use rplidar_drv::{ RplidarDevice, RplidarProtocol };
-    /// # let mut stream = Box::new(RingByteBuffer::with_capacity(100));
-    /// let channel = Channel::new(RplidarProtocol::new(), stream);
+    /// ```compile_fail
+    /// let mut serial_port = serialport::open(serial_port_name)?;
+    /// let channel = Channel::new(RplidarProtocol::new(), serial_port);
     /// let rplidar_device = RplidarDevice::new(channel);
+    /// ```
     pub fn new(channel: Channel<RplidarProtocol, T>) -> RplidarDevice<T> {
         RplidarDevice {
             channel: channel,
@@ -121,12 +107,10 @@ where
     /// Construct a new RplidarDevice with stream
     ///
     /// # Example
-    /// ```rust
-    /// # use rpos_drv::RingByteBuffer;
-    /// # use std::io::{ Read, Write };
-    /// # use rplidar_drv::RplidarDevice;
-    /// # let mut stream = Box::new(RingByteBuffer::with_capacity(100));
-    /// let rplidar_device = RplidarDevice::with_stream(stream);
+    /// ```compile_fail
+    /// let mut serial_port = serialport::open(serial_port_name)?;
+    /// let rplidar_device = RplidarDevice::with_stream(serial_port);
+    /// ```
     pub fn with_stream(stream: Box<T>) -> RplidarDevice<T> {
         RplidarDevice::<T>::new(rpos_drv::Channel::new(RplidarProtocol::new(), stream))
     }
@@ -163,7 +147,7 @@ where
         return Ok(());
     }
 
-    /// set motor PWM
+    /// Set motor PWM (via accessory board)
     pub fn set_motor_pwm(&mut self, pwm: u16) -> Result<()> {
         let mut payload = [0; 2];
         LittleEndian::write_u16(&mut payload, pwm);
@@ -174,28 +158,30 @@ where
         return Ok(());
     }
 
-    /// stop motor
+    /// Stop motor
     pub fn stop_motor(&mut self) -> Result<()> {
         self.set_motor_pwm(0)
     }
 
-    /// start motor
+    /// Start motor
     pub fn start_motor(&mut self) -> Result<()> {
         self.set_motor_pwm(RPLIDAR_DEFAULT_MOTOR_PWM)
     }
 
-    /// get lidar config
-    pub fn get_lidar_conf(&mut self, config_type: u32) -> Result<Vec<u8>> {
+    /*
+    /// Get LIDAR config
+    fn get_lidar_conf(&mut self, config_type: u32) -> Result<Vec<u8>> {
         self.get_lidar_conf_with_timeout(config_type, RPLIDAR_DEFAULT_TIMEOUT)
     }
 
     /// get lidar config with parameter
-    pub fn get_lidar_conf_with_param(&mut self, config_type: u32, param: &[u8]) -> Result<Vec<u8>> {
+    fn get_lidar_conf_with_param(&mut self, config_type: u32, param: &[u8]) -> Result<Vec<u8>> {
         self.get_lidar_conf_with_param_and_timeout(config_type, param, RPLIDAR_DEFAULT_TIMEOUT)
     }
+    */
 
     /// get lidar config with timeout
-    pub fn get_lidar_conf_with_timeout(
+    fn get_lidar_conf_with_timeout(
         &mut self,
         config_type: u32,
         timeout: Duration,
@@ -204,7 +190,7 @@ where
     }
 
     /// get lidar config with parameter and timeout
-    pub fn get_lidar_conf_with_param_and_timeout(
+    fn get_lidar_conf_with_param_and_timeout(
         &mut self,
         config_type: u32,
         param: &[u8],
@@ -242,6 +228,16 @@ where
 
     /// get typical scan mode of target LIDAR with timeout
     pub fn get_typical_scan_mode_with_timeout(&mut self, timeout: Duration) -> Result<u16> {
+        let device_info = self.get_device_info_with_timeout(timeout)?;
+
+        if device_info.firmware_version < RPLIDAR_GET_LIDAR_CONF_START_VERSION {
+            return Ok(if device_info.model >= 0x20u8 {
+                1u16
+            } else {
+                0u16
+            });
+        }
+
         let scan_mode_data =
             self.get_lidar_conf_with_timeout(RPLIDAR_CONF_SCAN_MODE_TYPICAL, timeout)?;
 
@@ -355,14 +351,40 @@ where
         &mut self,
         timeout: Duration,
     ) -> Result<Vec<ScanMode>> {
-        let scan_mode_count = self.get_scan_mode_count_with_timeout(timeout)?;
-        let mut output: Vec<ScanMode> = Vec::with_capacity(scan_mode_count as usize);
+        let device_info = self.get_device_info_with_timeout(timeout)?;
 
-        for i in 0..scan_mode_count {
-            output.push(self.get_scan_mode_with_timeout(i as u16, timeout)?);
+        if device_info.firmware_version < RPLIDAR_GET_LIDAR_CONF_START_VERSION {
+            let mut output: Vec<ScanMode> = Vec::with_capacity(2);
+
+            output.push(ScanMode {
+                id: 0u16,
+                us_per_sample: 1000000f32 / 2000f32,
+                max_distance: 8000f32,
+                ans_type: RPLIDAR_ANS_TYPE_MEASUREMENT,
+                name: "Standard".to_owned()
+            });
+
+            if device_info.model >= 0x20u8 {
+                output.push(ScanMode {
+                    id: 1u16,
+                    us_per_sample: 1000000f32 / 4000f32,
+                    max_distance: 16000f32,
+                    ans_type: RPLIDAR_ANS_TYPE_MEASUREMENT_CAPSULED,
+                    name: "Express".to_owned()
+                });
+            }
+
+            return Ok(output);
+        } else {
+            let scan_mode_count = self.get_scan_mode_count_with_timeout(timeout)?;
+            let mut output: Vec<ScanMode> = Vec::with_capacity(scan_mode_count as usize);
+
+            for i in 0..scan_mode_count {
+                output.push(self.get_scan_mode_with_timeout(i as u16, timeout)?);
+            }
+
+            return Ok(output);
         }
-
-        return Ok(output);
     }
 
     /// start scan
@@ -493,6 +515,26 @@ where
         }
     }
 
+    /// when hq capsuled measurement msg received
+    fn on_measurement_hq_capsuled_msg(&mut self, msg: &Message) -> Result<()> {
+        check_sync_and_checksum_hq(msg)?;
+        self.on_measurement_hq_capsuled(parse_resp!(
+            msg,
+            RplidarResponseHqCapsuledMeasurementNodes
+        )?);
+        return Ok(());
+    }
+
+    /// when hq capsuled measurement response received
+    fn on_measurement_hq_capsuled(
+        &mut self,
+        nodes: RplidarResponseHqCapsuledMeasurementNodes,
+    ) {
+        for node in nodes.nodes.iter() {
+            self.on_measurement_node_hq(node.clone());
+        }
+    }
+
     /// wait for next section of scan data
     fn wait_scan_data_with_timeout(&mut self, timeout: Duration) -> Result<()> {
         let opt_msg = self.channel.read_until(timeout)?;
@@ -502,11 +544,9 @@ where
                 RPLIDAR_ANS_TYPE_MEASUREMENT => {
                     self.on_measurement_node(parse_resp!(msg, RplidarResponseMeasurementNode)?)
                 }
-                RPLIDAR_ANS_TYPE_MEASUREMENT_HQ => {
-                    self.on_measurement_node_hq(parse_resp!(msg, RplidarResponseMeasurementNodeHq)?)
-                }
                 RPLIDAR_ANS_TYPE_MEASUREMENT_CAPSULED => self.on_measurement_capsuled_msg(&msg)?,
                 RPLIDAR_ANS_TYPE_MEASUREMENT_CAPSULED_ULTRA => self.on_measurement_ultra_capsuled_msg(&msg)?,
+                RPLIDAR_ANS_TYPE_MEASUREMENT_HQ => self.on_measurement_hq_capsuled_msg(&msg)?,
                 _ => {
                     return Err(Error::new(ErrorKind::ProtocolError, "unexpected response"));
                 }
@@ -603,6 +643,27 @@ where
 
         return Err(Error::new(ErrorKind::OperationTimeout, "operation timeout"));
     }
+
+    /// Check if the connected LIDAR supports motor control
+    pub fn check_motor_ctrl_support(&mut self) -> Result<bool> {
+        self.check_motor_ctrl_support_with_timeout(RPLIDAR_DEFAULT_TIMEOUT)
+    }
+
+    /// Check if the connected LIDAR supports motor control with timeout
+    pub fn check_motor_ctrl_support_with_timeout(&mut self, timeout: Duration) -> Result<bool> {
+        let mut data = [0u8; 4];
+        LittleEndian::write_u32(&mut data, 0u32);
+
+        let resp_msg = self.channel.invoke(&Message::with_data(RPLIDAR_CMD_GET_ACC_BOARD_FLAG, &data), timeout)?;
+
+        if let Some(msg) = resp_msg {
+            let support_flag = handle_resp!(RPLIDAR_ANS_TYPE_ACC_BOARD_FLAG, msg, u32)?;
+            
+            return Ok((support_flag & RPLIDAR_RESP_ACC_BOARD_FLAG_MOTOR_CTRL_SUPPORT_MASK) == RPLIDAR_RESP_ACC_BOARD_FLAG_MOTOR_CTRL_SUPPORT_MASK);
+        } else {
+            return Err(Error::new(ErrorKind::OperationTimeout, "operation timeout"));
+        }
+    }
 }
 
 fn check_sync_and_checksum(msg: &Message) -> Result<()> {
@@ -629,10 +690,26 @@ fn check_sync_and_checksum(msg: &Message) -> Result<()> {
     }
 }
 
+fn check_sync_and_checksum_hq(msg: &Message) -> Result<()> {
+    if msg.data.len() != std::mem::size_of::<RplidarResponseHqCapsuledMeasurementNodes>() {
+        return Err(Error::new(ErrorKind::ProtocolError, "data length mismatch"));
+    }
+
+    if msg.data[0] != RPLIDAR_RESP_MEASUREMENT_HQ_SYNC {
+        return Err(Error::new(ErrorKind::ProtocolError, "sync mismatch"));
+    }
+
+    let checksum = crc32::checksum_ieee(&msg.data[0..msg.data.len()-4]);
+    let recv_checksum = LittleEndian::read_u32(&msg.data[msg.data.len()-4..msg.data.len()]);
+
+    if checksum != recv_checksum {
+        return Err(Error::new(ErrorKind::ProtocolError, "checksum mismatch"));
+    } else {
+        return Ok(());
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
+
 }

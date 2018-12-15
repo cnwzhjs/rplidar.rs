@@ -8,35 +8,7 @@ const DEFAULT_CHANNEL_READ_BUFFER_SIZE: usize = 1024;
 /// Channel encode and decode message with protocol, and send and receive bytes via stream
 /// 
 /// # Examples
-/// ```rust
-/// # use rpos_drv::{ ProtocolDecoder, ProtocolEncoder, Channel, Message, Result, RingByteBuffer };
-/// # use std::io::{ Read, Write };
-/// # use std::fs::File;
-/// # let mut serial_port = Box::new(RingByteBuffer::with_capacity(100));
-/// # struct RplidarProtocol {}
-/// # impl RplidarProtocol {
-/// #   pub fn new() -> RplidarProtocol {
-/// #     RplidarProtocol {}
-/// #   }
-/// # }
-/// # impl ProtocolDecoder for RplidarProtocol {
-/// #   fn decode(&mut self, buf: &[u8]) -> Result<(usize, Option<Message>)> {
-/// #       Ok((0 as usize, None))
-/// #   }
-/// #   fn reset_decoder(&mut self) {}
-/// # }
-/// # impl ProtocolEncoder for RplidarProtocol {
-/// #   fn encode(&mut self, msg: &Message, bytes: &mut[u8]) -> Result<usize> {
-/// #     Ok(0 as usize)
-/// #   }
-/// #   fn estimate_encoded_size(&mut self, msg: &Message) -> Result<usize> {
-/// #     Ok(0 as usize)
-/// #   }
-/// #   fn write_to(&mut self, msg: &Message, dest: &mut impl Write) -> Result<usize> {
-/// #     Ok(0 as usize)
-/// #   }
-/// #   fn reset_encoder(&mut self) {}
-/// # }
+/// ```compile_fail
 /// let mut channel = Channel::new(
 ///     RplidarProtocol::new(),
 ///     serial_port
@@ -59,35 +31,7 @@ where
     /// Create a new `Channel` to read and write messages
     /// 
     /// # Example
-    /// ```rust
-    /// # use rpos_drv::{ ProtocolDecoder, ProtocolEncoder, Channel, Message, Result, RingByteBuffer };
-    /// # use std::io::{ Read, Write };
-    /// # use std::fs::File;
-    /// # let mut serial_port = Box::new(RingByteBuffer::with_capacity(100));
-    /// # struct RplidarProtocol {}
-    /// # impl RplidarProtocol {
-    /// #   pub fn new() -> RplidarProtocol {
-    /// #     RplidarProtocol {}
-    /// #   }
-    /// # }
-    /// # impl ProtocolDecoder for RplidarProtocol {
-    /// #   fn decode(&mut self, buf: &[u8]) -> Result<(usize, Option<Message>)> {
-    /// #       Ok((0 as usize, None))
-    /// #   }
-    /// #   fn reset_decoder(&mut self) {}
-    /// # }
-    /// # impl ProtocolEncoder for RplidarProtocol {
-    /// #   fn encode(&mut self, msg: &Message, bytes: &mut[u8]) -> Result<usize> {
-    /// #     Ok(0 as usize)
-    /// #   }
-    /// #   fn estimate_encoded_size(&mut self, msg: &Message) -> Result<usize> {
-    /// #     Ok(0 as usize)
-    /// #   }
-    /// #   fn write_to(&mut self, msg: &Message, dest: &mut impl Write) -> Result<usize> {
-    /// #     Ok(0 as usize)
-    /// #   }
-    /// #   fn reset_encoder(&mut self) {}
-    /// # }
+    /// ```compile_fail
     /// let channel = Channel::new(
     ///     RplidarProtocol::new(),
     ///     serial_port
@@ -100,35 +44,7 @@ where
     /// Create a new `Channel` with non-default ring buffer capacity
     /// 
     /// # Example
-    /// ```rust
-    /// # use rpos_drv::{ ProtocolDecoder, ProtocolEncoder, Channel, Message, Result, RingByteBuffer };
-    /// # use std::io::{ Read, Write };
-    /// # use std::fs::File;
-    /// # let mut serial_port = Box::new(RingByteBuffer::with_capacity(100));
-    /// # struct RplidarProtocol {}
-    /// # impl RplidarProtocol {
-    /// #   pub fn new() -> RplidarProtocol {
-    /// #     RplidarProtocol {}
-    /// #   }
-    /// # }
-    /// # impl ProtocolDecoder for RplidarProtocol {
-    /// #   fn decode(&mut self, buf: &[u8]) -> Result<(usize, Option<Message>)> {
-    /// #       Ok((0 as usize, None))
-    /// #   }
-    /// #   fn reset_decoder(&mut self) {}
-    /// # }
-    /// # impl ProtocolEncoder for RplidarProtocol {
-    /// #   fn encode(&mut self, msg: &Message, bytes: &mut[u8]) -> Result<usize> {
-    /// #     Ok(0 as usize)
-    /// #   }
-    /// #   fn estimate_encoded_size(&mut self, msg: &Message) -> Result<usize> {
-    /// #     Ok(0 as usize)
-    /// #   }
-    /// #   fn write_to(&mut self, msg: &Message, dest: &mut impl Write) -> Result<usize> {
-    /// #     Ok(0 as usize)
-    /// #   }
-    /// #   fn reset_encoder(&mut self) {}
-    /// # }
+    /// ```compile_fail
     /// let channel = Channel::with_read_buffer_size(
     ///     RplidarProtocol::new(),
     ///     serial_port,
@@ -155,37 +71,7 @@ where
     /// This function is usually used to reset protocol encoder and decoder when meet communication error
     /// 
     /// # Example
-    /// ```rust
-    /// # use rpos_drv::{ ProtocolDecoder, ProtocolEncoder, Channel, Message, Result, RingByteBuffer };
-    /// # use std::io::{ Read, Write };
-    /// # use std::fs::File;
-    /// # use std::time::Duration;
-    /// # let mut serial_port = Box::new(RingByteBuffer::with_capacity(100));
-    /// # struct RplidarProtocol {}
-    /// # impl RplidarProtocol {
-    /// #   pub fn new() -> RplidarProtocol {
-    /// #     RplidarProtocol {}
-    /// #   }
-    /// # }
-    /// # impl ProtocolDecoder for RplidarProtocol {
-    /// #   fn decode(&mut self, buf: &[u8]) -> Result<(usize, Option<Message>)> {
-    /// #       Ok((0 as usize, None))
-    /// #   }
-    /// #   fn reset_decoder(&mut self) {}
-    /// # }
-    /// # impl ProtocolEncoder for RplidarProtocol {
-    /// #   fn encode(&mut self, msg: &Message, bytes: &mut[u8]) -> Result<usize> {
-    /// #     Ok(0 as usize)
-    /// #   }
-    /// #   fn estimate_encoded_size(&mut self, msg: &Message) -> Result<usize> {
-    /// #     Ok(0 as usize)
-    /// #   }
-    /// #   fn write_to(&mut self, msg: &Message, dest: &mut impl Write) -> Result<usize> {
-    /// #     Ok(0 as usize)
-    /// #   }
-    /// #   fn reset_encoder(&mut self) {}
-    /// # }
-    /// # let mut channel = Channel::new(RplidarProtocol::new(), serial_port);
+    /// ```compile_fail
     /// match channel.invoke(&Message::new(1), Duration::from_secs(1)) {
     ///     Ok(_) => {},
     ///     Err(_) => { channel.reset(); }
@@ -199,36 +85,7 @@ where
     /// Read message from channel
     /// 
     /// # Example
-    /// ```rust
-    /// # use rpos_drv::{ ProtocolDecoder, ProtocolEncoder, Channel, Message, Result, RingByteBuffer };
-    /// # use std::io::{ Read, Write };
-    /// # use std::fs::File;
-    /// # let mut serial_port = Box::new(RingByteBuffer::with_capacity(100));
-    /// # struct RplidarProtocol {}
-    /// # impl RplidarProtocol {
-    /// #   pub fn new() -> RplidarProtocol {
-    /// #     RplidarProtocol {}
-    /// #   }
-    /// # }
-    /// # impl ProtocolDecoder for RplidarProtocol {
-    /// #   fn decode(&mut self, buf: &[u8]) -> Result<(usize, Option<Message>)> {
-    /// #       Ok((0 as usize, None))
-    /// #   }
-    /// #   fn reset_decoder(&mut self) {}
-    /// # }
-    /// # impl ProtocolEncoder for RplidarProtocol {
-    /// #   fn encode(&mut self, msg: &Message, bytes: &mut[u8]) -> Result<usize> {
-    /// #     Ok(0 as usize)
-    /// #   }
-    /// #   fn estimate_encoded_size(&mut self, msg: &Message) -> Result<usize> {
-    /// #     Ok(0 as usize)
-    /// #   }
-    /// #   fn write_to(&mut self, msg: &Message, dest: &mut impl Write) -> Result<usize> {
-    /// #     Ok(0 as usize)
-    /// #   }
-    /// #   fn reset_encoder(&mut self) {}
-    /// # }
-    /// # let mut channel = Channel::new(RplidarProtocol::new(), serial_port);
+    /// ```compile_fail
     /// if let Some(msg) = channel.read().unwrap() {
     ///     println!("{:?}", msg);
     /// }
@@ -255,37 +112,7 @@ where
     /// Read message until timeout
     /// 
     /// # Example
-    /// ```rust
-    /// # use std::time::Duration;
-    /// # use rpos_drv::{ ProtocolDecoder, ProtocolEncoder, Channel, Message, Result, RingByteBuffer };
-    /// # use std::io::{ Read, Write };
-    /// # use std::fs::File;
-    /// # let mut serial_port = Box::new(RingByteBuffer::with_capacity(100));
-    /// # struct RplidarProtocol {}
-    /// # impl RplidarProtocol {
-    /// #   pub fn new() -> RplidarProtocol {
-    /// #     RplidarProtocol {}
-    /// #   }
-    /// # }
-    /// # impl ProtocolDecoder for RplidarProtocol {
-    /// #   fn decode(&mut self, buf: &[u8]) -> Result<(usize, Option<Message>)> {
-    /// #       Ok((0 as usize, None))
-    /// #   }
-    /// #   fn reset_decoder(&mut self) {}
-    /// # }
-    /// # impl ProtocolEncoder for RplidarProtocol {
-    /// #   fn encode(&mut self, msg: &Message, bytes: &mut[u8]) -> Result<usize> {
-    /// #     Ok(0 as usize)
-    /// #   }
-    /// #   fn estimate_encoded_size(&mut self, msg: &Message) -> Result<usize> {
-    /// #     Ok(0 as usize)
-    /// #   }
-    /// #   fn write_to(&mut self, msg: &Message, dest: &mut impl Write) -> Result<usize> {
-    /// #     Ok(0 as usize)
-    /// #   }
-    /// #   fn reset_encoder(&mut self) {}
-    /// # }
-    /// # let mut channel = Channel::new(RplidarProtocol::new(), serial_port);
+    /// ```compile_fail
     /// channel.read_until(Duration::from_secs(1));
     /// ```
     pub fn read_until(&mut self, timeout: Duration) -> Result<Option<Message>> {
@@ -303,36 +130,7 @@ where
     /// Write message to channel
     /// 
     /// # Example
-    /// ```rust
-    /// # use rpos_drv::{ ProtocolDecoder, ProtocolEncoder, Channel, Message, Result, RingByteBuffer };
-    /// # use std::io::{ Read, Write };
-    /// # use std::fs::File;
-    /// # let mut serial_port = Box::new(RingByteBuffer::with_capacity(100));
-    /// # struct RplidarProtocol {}
-    /// # impl RplidarProtocol {
-    /// #   pub fn new() -> RplidarProtocol {
-    /// #     RplidarProtocol {}
-    /// #   }
-    /// # }
-    /// # impl ProtocolDecoder for RplidarProtocol {
-    /// #   fn decode(&mut self, buf: &[u8]) -> Result<(usize, Option<Message>)> {
-    /// #       Ok((0 as usize, None))
-    /// #   }
-    /// #   fn reset_decoder(&mut self) {}
-    /// # }
-    /// # impl ProtocolEncoder for RplidarProtocol {
-    /// #   fn encode(&mut self, msg: &Message, bytes: &mut[u8]) -> Result<usize> {
-    /// #     Ok(0 as usize)
-    /// #   }
-    /// #   fn estimate_encoded_size(&mut self, msg: &Message) -> Result<usize> {
-    /// #     Ok(0 as usize)
-    /// #   }
-    /// #   fn write_to(&mut self, msg: &Message, dest: &mut impl Write) -> Result<usize> {
-    /// #     Ok(0 as usize)
-    /// #   }
-    /// #   fn reset_encoder(&mut self) {}
-    /// # }
-    /// # let mut channel = Channel::new(RplidarProtocol::new(), serial_port);
+    /// ```compile_fail
     /// channel.write(&Message::new(1)).unwrap();
     /// ```
     pub fn write(&mut self, msg:&Message) -> Result<usize> {
@@ -344,37 +142,7 @@ where
     /// Send a request to channel and wait for response
     /// 
     /// # Example
-    /// ```rust
-    /// # use std::time::Duration;
-    /// # use rpos_drv::{ ProtocolDecoder, ProtocolEncoder, Channel, Message, Result, RingByteBuffer };
-    /// # use std::io::{ Read, Write };
-    /// # use std::fs::File;
-    /// # let mut serial_port = Box::new(RingByteBuffer::with_capacity(100));
-    /// # struct RplidarProtocol {}
-    /// # impl RplidarProtocol {
-    /// #   pub fn new() -> RplidarProtocol {
-    /// #     RplidarProtocol {}
-    /// #   }
-    /// # }
-    /// # impl ProtocolDecoder for RplidarProtocol {
-    /// #   fn decode(&mut self, buf: &[u8]) -> Result<(usize, Option<Message>)> {
-    /// #       Ok((0 as usize, None))
-    /// #   }
-    /// #   fn reset_decoder(&mut self) {}
-    /// # }
-    /// # impl ProtocolEncoder for RplidarProtocol {
-    /// #   fn encode(&mut self, msg: &Message, bytes: &mut[u8]) -> Result<usize> {
-    /// #     Ok(0 as usize)
-    /// #   }
-    /// #   fn estimate_encoded_size(&mut self, msg: &Message) -> Result<usize> {
-    /// #     Ok(0 as usize)
-    /// #   }
-    /// #   fn write_to(&mut self, msg: &Message, dest: &mut impl Write) -> Result<usize> {
-    /// #     Ok(0 as usize)
-    /// #   }
-    /// #   fn reset_encoder(&mut self) {}
-    /// # }
-    /// # let mut channel = Channel::new(RplidarProtocol::new(), serial_port);
+    /// ```compile_fail
     /// let resp = channel.invoke(&Message::new(1), Duration::from_secs(1));
     /// ```
     pub fn invoke(&mut self, request:&Message, timeout: Duration) -> Result<Option<Message>> {

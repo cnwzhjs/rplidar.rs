@@ -104,7 +104,18 @@ fn main() {
 
     println!("Typical scan mode: {}", typical_scan_mode);
 
-    rplidar.set_motor_pwm(600).expect("failed to start motor");
+    match rplidar.check_motor_ctrl_support() {
+        Ok(support) if support == true => {
+            println!("Accessory board is detected and support motor control, starting motor...");
+            rplidar.set_motor_pwm(600).expect("failed to start motor");
+        },
+        Ok(_) => {
+            println!("Accessory board is detected, but doesn't support motor control");
+        },
+        Err(_) => {
+            println!("Accessory board isn't detected");
+        }
+    }
 
     println!("Starting LIDAR in typical mode...");
 

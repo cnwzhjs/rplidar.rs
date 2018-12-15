@@ -105,3 +105,11 @@ impl ScanOptions {
         }
     }
 }
+
+/// Health status of device
+#[derive(Debug, Clone, PartialEq)]
+pub enum Health {
+    Healthy,
+    Warning(u16),
+    Error(u16)
+}
