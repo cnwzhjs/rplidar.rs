@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/cnwzhjs/rplidar.rs.svg?branch=master)](https://travis-ci.org/cnwzhjs/rplidar.rs)
+
 # Slamtec RPLIDAR Public SDK for Rust
 
 ## Introduction
