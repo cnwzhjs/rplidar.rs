@@ -2,8 +2,8 @@
 name = "rplidar_drv"
 description = "Driver for Slamtec RPLIDAR series laser sensors"
 version = "0.5.0"
-license = "GPLv3"
-repository = "https://github.com/cnwzhjs/rplidar.rs/rplidar_drv"
+license = "BSD-2-Clause"
+repository = "https://github.com/cnwzhjs/rplidar.rs/tree/master/rplidar_drv"
 keywords = ["Slamtec", "Rplidar", "Driver"]
 authors = ["Tony Huang <tony@slamtec.com>"]
 edition = "2018"
