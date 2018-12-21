@@ -15,7 +15,7 @@
 | feature - stop                         | since 0.1.0  |
 | feature - grab_scan                    | since 0.2.0  |
 | feature - grab_scan_point              | since 0.1.0  |
-| feature - sort_scan                    | No           |
+| feature - sort_scan                    | since 0.5.0  |
 | protocol - measurement_nodes           | since 0.1.0  |
 | protocol - capsuled_nodes              | since 0.1.0  |
 | protocol - ultra_capsuled_nodes        | since 0.3.0  |

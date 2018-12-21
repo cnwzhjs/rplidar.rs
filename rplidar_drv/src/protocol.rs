@@ -24,9 +24,9 @@ enum DecodeStatus {
     ReceiveResponse,
 }
 
-/// The implementation of RPLIDAR protocol
+/// The implementation of RPLIDAR host protocol
 #[derive(Debug, Clone, PartialEq)]
-pub struct RplidarProtocol {
+pub struct RplidarHostProtocol {
     status: DecodeStatus,
     ans_header: Vec<u8>,
     ans_flag: u8,
@@ -34,9 +34,9 @@ pub struct RplidarProtocol {
     decoding_msg: Message, // decode_buffer: RingByteBuffer
 }
 
-impl RplidarProtocol {
-    pub fn new() -> RplidarProtocol {
-        RplidarProtocol {
+impl RplidarHostProtocol {
+    pub fn new() -> RplidarHostProtocol {
+        RplidarHostProtocol {
             status: DecodeStatus::WaitSyncByte(0),
             ans_header: Vec::new(),
             ans_flag: 0,
@@ -141,7 +141,7 @@ impl RplidarProtocol {
     }
 }
 
-impl ProtocolDecoder for RplidarProtocol {
+impl ProtocolDecoder for RplidarHostProtocol {
     /// Decode bytes and return consumed bytes and message
     fn decode(&mut self, buf: &[u8]) -> Result<(usize, Option<Message>)> {
         let mut i = 0;
@@ -177,7 +177,7 @@ impl ProtocolDecoder for RplidarProtocol {
     }
 }
 
-impl ProtocolEncoder for RplidarProtocol {
+impl ProtocolEncoder for RplidarHostProtocol {
     /// Encode message into byte array
     /// Always encode commands
     fn encode(&mut self, msg: &Message, bytes: &mut [u8]) -> Result<usize> {
@@ -260,7 +260,7 @@ mod tests {
 
     #[test]
     fn protocol_encode() {
-        let mut protocol = super::RplidarProtocol::new();
+        let mut protocol = super::RplidarHostProtocol::new();
 
         assert_eq!(
             encode(&mut protocol, &Message::new(0x25))

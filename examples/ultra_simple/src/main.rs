@@ -5,7 +5,7 @@ extern crate serialport;
 
 use hex_slice::AsHex;
 
-use rplidar_drv::{Health, RplidarDevice, RplidarProtocol};
+use rplidar_drv::{Health, RplidarDevice, RplidarHostProtocol};
 use rpos_drv::{Channel, ErrorKind};
 use serialport::prelude::*;
 use std::time::Duration;
@@ -42,8 +42,8 @@ fn main() {
         .write_data_terminal_ready(false)
         .expect("failed to clear DTR");
 
-    let channel = Channel::<RplidarProtocol, serialport::SerialPort>::new(
-        RplidarProtocol::new(),
+    let channel = Channel::<RplidarHostProtocol, serialport::SerialPort>::new(
+        RplidarHostProtocol::new(),
         serial_port,
     );
 

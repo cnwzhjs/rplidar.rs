@@ -14,6 +14,7 @@ mod checksum;
 mod cmds;
 mod prelude;
 mod protocol;
+pub mod utils;
 
 pub use self::prelude::*;
 
@@ -25,7 +26,7 @@ use self::capsuled_parser::parse_capsuled;
 use self::ultra_capsuled_parser::parse_ultra_capsuled;
 use self::checksum::Checksum;
 use self::cmds::*;
-pub use self::protocol::RplidarProtocol;
+pub use self::protocol::RplidarHostProtocol;
 use byteorder::{ByteOrder, LittleEndian};
 use rpos_drv::{Channel, Error, ErrorKind, Message, Result};
 use std::collections::VecDeque;
@@ -39,7 +40,7 @@ const RPLIDAR_GET_LIDAR_CONF_START_VERSION:u16 = ((1 << 8) | (24)) as u16;
 /// Rplidar device driver
 #[derive(Debug)]
 pub struct RplidarDevice<T: ?Sized> {
-    channel: Channel<RplidarProtocol, T>,
+    channel: Channel<RplidarHostProtocol, T>,
     cached_measurement_nodes: VecDeque<ScanPoint>,
     cached_prev_capsule: CachedPrevCapsule,
 }
@@ -93,10 +94,10 @@ where
     /// # Example
     /// ```compile_fail
     /// let mut serial_port = serialport::open(serial_port_name)?;
-    /// let channel = Channel::new(RplidarProtocol::new(), serial_port);
+    /// let channel = Channel::new(RplidarHostProtocol::new(), serial_port);
     /// let rplidar_device = RplidarDevice::new(channel);
     /// ```
-    pub fn new(channel: Channel<RplidarProtocol, T>) -> RplidarDevice<T> {
+    pub fn new(channel: Channel<RplidarHostProtocol, T>) -> RplidarDevice<T> {
         RplidarDevice {
             channel: channel,
             cached_measurement_nodes: VecDeque::with_capacity(RPLIDAR_DEFAULT_CACHE_DEPTH),
@@ -112,7 +113,7 @@ where
     /// let rplidar_device = RplidarDevice::with_stream(serial_port);
     /// ```
     pub fn with_stream(stream: Box<T>) -> RplidarDevice<T> {
-        RplidarDevice::<T>::new(rpos_drv::Channel::new(RplidarProtocol::new(), stream))
+        RplidarDevice::<T>::new(rpos_drv::Channel::new(RplidarHostProtocol::new(), stream))
     }
 
     /// get device info of the RPLIDAR
@@ -707,9 +708,4 @@ fn check_sync_and_checksum_hq(msg: &Message) -> Result<()> {
     } else {
         return Ok(());
     }
-}
-
-#[cfg(test)]
-mod tests {
-
 }

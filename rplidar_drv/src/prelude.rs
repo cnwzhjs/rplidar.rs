@@ -1,8 +1,9 @@
 use std::f32::consts::PI;
 use super::answers::RPLIDAR_RESP_HQ_FLAG_SYNCBIT;
+use std::cmp::Ordering;
 
 /// Scan point in a particular laser scan
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Eq)]
 pub struct ScanPoint {
     pub angle_z_q14: u16,
     pub dist_mm_q2: u32,
@@ -10,19 +11,21 @@ pub struct ScanPoint {
     pub flag: u8,
 }
 
-/// Laser scan
-#[derive(Debug, Clone, PartialEq)]
-pub struct LaserScan {
-    pub points: Vec<ScanPoint>,
-}
-
 impl ScanPoint {
     pub fn angle(&self) -> f32 {
         return (self.angle_z_q14 as f32) / 16384f32 / 2f32 * PI;
     }
 
+    pub fn set_angle(&mut self, angle:f32) {
+        self.angle_z_q14 = (angle * 16384f32 * 2f32 / PI) as u16;
+    }
+
     pub fn distance(&self) -> f32 {
         return (self.dist_mm_q2 as f32) / 4000f32;
+    }
+
+    pub fn set_distance(&mut self, dist: f32) {
+        self.dist_mm_q2 = (dist * 4000f32) as u32;
     }
 
     pub fn is_sync(&self) -> bool {
@@ -31,6 +34,27 @@ impl ScanPoint {
 
     pub fn is_valid(&self) -> bool {
         return self.quality != 0 && self.dist_mm_q2 != 0;
+    }
+}
+
+impl Ord for ScanPoint {
+    fn cmp(&self, other: &ScanPoint) -> Ordering {
+        self.angle_z_q14.cmp(&other.angle_z_q14)
+    }
+}
+
+impl PartialOrd for ScanPoint {
+    fn partial_cmp(&self, other: &ScanPoint) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl PartialEq for ScanPoint {
+    fn eq(&self, other: &ScanPoint) -> bool {
+        self.angle_z_q14 == other.angle_z_q14
+        && self.dist_mm_q2 == other.dist_mm_q2
+        && self.quality == other.quality
+        && self.flag == other.flag
     }
 }
 
