@@ -5,7 +5,7 @@ authors = ["Tony Huang <tony@slamtec.com>"]
 edition = "2018"
 
 [dependencies]
-rplidar_drv = { path = "../../rplidar_drv" }
-rpos_drv = { path = "../../rpos_drv" }
+rplidar_drv = "0.5.0"
+rpos_drv = "0.1.0"
 serialport = { version = "3.1.0", default-features = false, features = [] }
 hex-slice = "0.1.4"
