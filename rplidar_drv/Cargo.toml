@@ -9,6 +9,6 @@ authors = ["Tony Huang <tony@slamtec.com>"]
 edition = "2018"
 
 [dependencies]
-rpos_drv = { path = "../rpos_drv" }
+rpos_drv = "0.1.0"
 byteorder = "1.2.7"
 crc = "1.8.1"
