@@ -1,8 +1,10 @@
 use super::checksum::Checksum;
 use byteorder::{ByteOrder, LittleEndian};
-use rpos_drv::{Error, ErrorKind, Message, ProtocolDecoder, ProtocolEncoder, Result};
+use rpos_drv::{Message, ProtocolDecoder, ProtocolEncoder};
 use std::cmp::min;
 use std::io::Write;
+
+use super::errors::*;
 
 const RPLIDAR_CMD_SYNC_BYTE: u8 = 0xA5;
 const RPLIDAR_CMDFLAG_HAS_PAYLOAD: u8 = 0x80;
@@ -77,10 +79,7 @@ impl RplidarHostProtocol {
                 return Ok(1);
             }
         } else {
-            return Err(Error::new(
-                ErrorKind::ProtocolError,
-                "sync byte status error",
-            ));
+            return Err(Error::ProtocolError("sync byte status error".to_owned()));
         }
     }
 
@@ -94,10 +93,7 @@ impl RplidarHostProtocol {
             self.decode_ans_header_metadata();
             if self.response_size == 0 {
                 if (self.ans_flag & RPLIDAR_ANS_PKTFLAG_LOOP) == RPLIDAR_ANS_PKTFLAG_LOOP {
-                    return Err(Error::new(
-                        ErrorKind::ProtocolError,
-                        "received loop answer with no response size",
-                    ));
+                    return Err(Error::ProtocolError("received loop answer with no response size".to_owned()));
                 } else {
                     let answer = Ok((bytes_actual_read, Some(self.decoding_msg.clone())));
                     self.reset_decoder();
@@ -184,11 +180,11 @@ impl ProtocolEncoder for RplidarHostProtocol {
         let estimated_encoded_size = self.estimate_encoded_size(msg)?;
 
         if estimated_encoded_size > bytes.len() {
-            return Err(Error::new(ErrorKind::BufferTooSmall, "buffer too small"));
+            return Err(Error::BufferTooSmall);
         }
 
         if msg.data.len() > 255 {
-            return Err(Error::new(ErrorKind::OperationFail, "payload too big"));
+            return Err(Error::OperationFail("payload too big".to_owned()));
         }
 
         let cmd = if msg.data.len() != 0 {
@@ -220,7 +216,7 @@ impl ProtocolEncoder for RplidarHostProtocol {
     /// Estimate encoded message size (must be greater than or equal to the actual encoded size)
     fn estimate_encoded_size(&mut self, msg: &Message) -> Result<usize> {
         if msg.data.len() > 255 {
-            return Err(Error::new(ErrorKind::OperationFail, "payload too big"));
+            return Err(Error::OperationFail("payload too big".to_owned()));
         }
 
         if msg.data.len() > 0 {

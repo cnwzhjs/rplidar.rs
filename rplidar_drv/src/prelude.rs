@@ -58,8 +58,6 @@ impl PartialEq for ScanPoint {
     }
 }
 
-pub use std::result::Result;
-
 /// Description of a specific scan mode
 #[derive(Debug, Clone, PartialEq)]
 pub struct ScanMode {

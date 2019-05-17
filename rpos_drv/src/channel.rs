@@ -1,5 +1,5 @@
 use super::ring_byte_buffer::RingByteBuffer;
-use super::prelude::{Message, ProtocolDecoder, ProtocolEncoder, Result, Error, ErrorKind};
+use super::prelude::*;
 use std::io;
 use std::time::{ Instant, Duration };
 
@@ -124,7 +124,7 @@ where
             }
         }
 
-        return Err(Error::new(ErrorKind::OperationTimeout, "operation timeout"));
+        return Err(Error::OperationFail("operation failed".to_owned()));
     }
 
     /// Write message to channel

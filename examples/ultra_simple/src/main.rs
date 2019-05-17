@@ -6,7 +6,7 @@ extern crate serialport;
 use hex_slice::AsHex;
 
 use rplidar_drv::{Health, RplidarDevice, RplidarHostProtocol};
-use rpos_drv::{Channel, ErrorKind};
+use rpos_drv::{Channel, Error};
 use serialport::prelude::*;
 use std::time::Duration;
 
@@ -144,7 +144,7 @@ fn main() {
                 }*/
             }
             Err(err) => {
-                if err.kind() == ErrorKind::OperationTimeout {
+                if let Error::OperationTimeout = err {
                     continue;
                 } else {
                     println!("Error: {:?}", err);

@@ -1,5 +1,5 @@
-use super::prelude::{ ScanPoint };
-use rpos_drv::{Error, ErrorKind, Result};
+use super::prelude::*;
+use super::errors::*;
 use std::f32::consts::PI;
 
 const PI2:f32 = PI * 2f32;
@@ -41,7 +41,7 @@ fn tune_head(scan: &mut Vec<ScanPoint>, inc_origin_angle: f32) -> Result<()> {
 
         return Ok(());
     } else {
-        return Err(Error::new(ErrorKind::OperationFail, "no valid point"));
+        return Err(Error::OperationFail("operation failed".to_owned()));
     }
 }
 
@@ -57,7 +57,7 @@ fn tune_tail(scan: &mut Vec<ScanPoint>, inc_origin_angle: f32) -> Result<()> {
 
         return Ok(());
     } else {
-        return Err(Error::new(ErrorKind::OperationFail, "no valid point"));
+        return Err(Error::OperationFail("operation failed".to_owned()));
     }
 }
 

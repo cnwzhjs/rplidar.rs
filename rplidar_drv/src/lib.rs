@@ -12,11 +12,13 @@ mod capsuled_parser;
 mod ultra_capsuled_parser;
 mod checksum;
 mod cmds;
+mod errors;
 mod prelude;
 mod protocol;
 pub mod utils;
 
 pub use self::prelude::*;
+pub use self::errors::*;
 
 pub use self::answers::RplidarResponseDeviceInfo;
 
@@ -28,7 +30,7 @@ use self::checksum::Checksum;
 use self::cmds::*;
 pub use self::protocol::RplidarHostProtocol;
 use byteorder::{ByteOrder, LittleEndian};
-use rpos_drv::{Channel, Error, ErrorKind, Message, Result};
+use rpos_drv::{Channel, Message, Result};
 use std::collections::VecDeque;
 use std::io::{Read, Write};
 use std::mem::transmute_copy;
@@ -49,7 +51,7 @@ macro_rules! parse_resp_data {
     ($x:expr, $t:ty) => {{
         const SIZE: usize = std::mem::size_of::<$t>();
         if $x.len() != SIZE {
-            Err(Error::new(ErrorKind::OperationFail, "answer type mismatch"))
+            Err(Error::OperationFail("answer type mismatch".to_owned()))
         } else {
             let mut slice = [0u8; SIZE];
             slice.clone_from_slice(&$x[..]);
@@ -67,7 +69,7 @@ macro_rules! parse_resp {
 macro_rules! handle_resp {
     ($ans:expr, $x:expr, $t:ty) => {
         if $x.cmd != $ans {
-            Err(Error::new(ErrorKind::OperationFail, "answer type mismatch"))
+            Err(Error::OperationFail("answer type mismatch".to_owned()))
         } else {
             parse_resp!($x, $t)
         }
@@ -133,7 +135,7 @@ where
             return handle_resp!(RPLIDAR_ANS_TYPE_DEVINFO, msg, RplidarResponseDeviceInfo);
         }
 
-        return Err(Error::new(ErrorKind::OperationTimeout, "operation timeout"));
+        return Err(Error::OperationTimeout);
     }
 
     /// Stop lidar
@@ -206,19 +208,16 @@ where
 
         if let Some(mut response_msg) = response {
             if response_msg.cmd != RPLIDAR_ANS_TYPE_GET_LIDAR_CONF {
-                return Err(Error::new(ErrorKind::OperationFail, "answer type mismatch"));
+                return Err(Error::OperationFail("answer type mismatch".to_owned()));
             } else if response_msg.data.len() < 4
                 || LittleEndian::read_u32(&response_msg.data[0..4]) != config_type
             {
-                return Err(Error::new(
-                    ErrorKind::OperationFail,
-                    "answer config type mismatch",
-                ));
+                return Err(Error::OperationFail("answer config type mismatch".to_owned()));
             } else {
                 return Ok(response_msg.data.split_off(4));
             }
         } else {
-            return Err(Error::new(ErrorKind::OperationTimeout, "operation timeout"));
+            return Err(Error::OperationTimeout);
         }
     }
 
@@ -312,10 +311,7 @@ where
         if let Ok(name) = std::str::from_utf8(&ans_type_data) {
             return Ok(name.to_owned().trim_matches('\0').to_owned());
         } else {
-            return Err(Error::new(
-                ErrorKind::ProtocolError,
-                "invalid scan mode name",
-            ));
+            return Err(Error::ProtocolError("invalid scan mode name".to_owned()));
         }
     }
 
@@ -549,7 +545,7 @@ where
                 RPLIDAR_ANS_TYPE_MEASUREMENT_CAPSULED_ULTRA => self.on_measurement_ultra_capsuled_msg(&msg)?,
                 RPLIDAR_ANS_TYPE_MEASUREMENT_HQ => self.on_measurement_hq_capsuled_msg(&msg)?,
                 _ => {
-                    return Err(Error::new(ErrorKind::ProtocolError, "unexpected response"));
+                    return Err(Error::ProtocolError("unexpected response".to_owned()));
                 }
             }
             return Ok(());
@@ -569,10 +565,7 @@ where
             self.wait_scan_data_with_timeout(timeout)?;
 
             if self.cached_measurement_nodes.is_empty() {
-                return Err(Error::new(
-                    ErrorKind::OperationTimeout,
-                    "grab scan point timeout",
-                ));
+                return Err(Error::OperationTimeout);
             }
         }
 
@@ -591,7 +584,7 @@ where
 
         'outter_loop: loop {
             if Instant::now() > deadline {
-                return Err(Error::new(ErrorKind::OperationTimeout, "operation timeout"));
+                return Err(Error::OperationTimeout);
             }
 
             if self.cached_measurement_nodes.len() <= end {
@@ -642,7 +635,7 @@ where
             });
         }
 
-        return Err(Error::new(ErrorKind::OperationTimeout, "operation timeout"));
+        return Err(Error::OperationTimeout);
     }
 
     /// Check if the connected LIDAR supports motor control
@@ -662,22 +655,22 @@ where
             
             return Ok((support_flag & RPLIDAR_RESP_ACC_BOARD_FLAG_MOTOR_CTRL_SUPPORT_MASK) == RPLIDAR_RESP_ACC_BOARD_FLAG_MOTOR_CTRL_SUPPORT_MASK);
         } else {
-            return Err(Error::new(ErrorKind::OperationTimeout, "operation timeout"));
+            return Err(Error::OperationTimeout);
         }
     }
 }
 
 fn check_sync_and_checksum(msg: &Message) -> Result<()> {
     if msg.data.len() < 2 {
-        return Err(Error::new(ErrorKind::ProtocolError, "data too short"));
+        return Err(Error::ProtocolError("data too short".to_owned()));
     }
 
     if (msg.data[0] >> 4) != RPLIDAR_RESP_MEASUREMENT_EXP_SYNC_1 {
-        return Err(Error::new(ErrorKind::ProtocolError, "miss sync 1"));
+        return Err(Error::ProtocolError("miss sync 1".to_owned()));
     }
 
     if (msg.data[1] >> 4) != RPLIDAR_RESP_MEASUREMENT_EXP_SYNC_2 {
-        return Err(Error::new(ErrorKind::ProtocolError, "miss sync 2"));
+        return Err(Error::ProtocolError("miss sync 2".to_owned()));
     }
 
     let recv_checksum = (msg.data[0] & 0xf) | (msg.data[1] << 4);
@@ -685,7 +678,7 @@ fn check_sync_and_checksum(msg: &Message) -> Result<()> {
     checksum.push_slice(&msg.data[2..]);
 
     if checksum.checksum() != recv_checksum {
-        return Err(Error::new(ErrorKind::ProtocolError, "checksum mismatch"));
+        return Err(Error::ProtocolError("checksum mismatch".to_owned()));
     } else {
         return Ok(());
     }
@@ -693,18 +686,18 @@ fn check_sync_and_checksum(msg: &Message) -> Result<()> {
 
 fn check_sync_and_checksum_hq(msg: &Message) -> Result<()> {
     if msg.data.len() != std::mem::size_of::<RplidarResponseHqCapsuledMeasurementNodes>() {
-        return Err(Error::new(ErrorKind::ProtocolError, "data length mismatch"));
+        return Err(Error::ProtocolError("data length mismatch".to_owned()));
     }
 
     if msg.data[0] != RPLIDAR_RESP_MEASUREMENT_HQ_SYNC {
-        return Err(Error::new(ErrorKind::ProtocolError, "sync mismatch"));
+        return Err(Error::ProtocolError("sync mismatch".to_owned()));
     }
 
     let checksum = crc32::checksum_ieee(&msg.data[0..msg.data.len()-4]);
     let recv_checksum = LittleEndian::read_u32(&msg.data[msg.data.len()-4..msg.data.len()]);
 
     if checksum != recv_checksum {
-        return Err(Error::new(ErrorKind::ProtocolError, "checksum mismatch"));
+        return Err(Error::ProtocolError("checksum mismatch".to_owned()));
     } else {
         return Ok(());
     }
