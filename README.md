@@ -18,6 +18,7 @@ Please see [Roadmap](https://github.com/cnwzhjs/rplidar.rs/blob/master/docs/Road
 
 ## Release Notes
 
+* [v0.6.0](https://github.com/cnwzhjs/rplidar.rs/blob/master/docs/ReleaseNote.v0.6.0.md)
 * [v0.5.0](https://github.com/cnwzhjs/rplidar.rs/blob/master/docs/ReleaseNote.v0.5.0.md)
 * [v0.4.0](https://github.com/cnwzhjs/rplidar.rs/blob/master/docs/ReleaseNote.v0.4.0.md)
 * [v0.3.0](https://github.com/cnwzhjs/rplidar.rs/blob/master/docs/ReleaseNote.v0.3.0.md)
