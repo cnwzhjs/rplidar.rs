@@ -94,7 +94,7 @@ where
     /// Construct a new RplidarDevice with channel
     ///
     /// # Example
-    /// ```compile_fail
+    /// ```ignore
     /// let mut serial_port = serialport::open(serial_port_name)?;
     /// let channel = Channel::new(RplidarHostProtocol::new(), serial_port);
     /// let rplidar_device = RplidarDevice::new(channel);
@@ -110,7 +110,7 @@ where
     /// Construct a new RplidarDevice with stream
     ///
     /// # Example
-    /// ```compile_fail
+    /// ```ignore
     /// let mut serial_port = serialport::open(serial_port_name)?;
     /// let rplidar_device = RplidarDevice::with_stream(serial_port);
     /// ```
