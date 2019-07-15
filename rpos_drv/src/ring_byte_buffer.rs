@@ -180,40 +180,40 @@ mod tests {
     use std::io::{Read, Write};
 
     #[test]
-    fn ctor() {
-        let ringbuf = super::RingByteBuffer::with_capacity(100);
+    fn constructor() {
+        let ring_buf = super::RingByteBuffer::with_capacity(100);
 
-        assert_eq!(ringbuf.len(), 0);
-        assert_eq!(ringbuf.capacity(), 100);
-        assert_eq!(ringbuf.free_space(), 100);
-        assert_eq!(ringbuf.current_read_slice().len(), 0);
+        assert_eq!(ring_buf.len(), 0);
+        assert_eq!(ring_buf.capacity(), 100);
+        assert_eq!(ring_buf.free_space(), 100);
+        assert_eq!(ring_buf.current_read_slice().len(), 0);
     }
 
     #[test]
     fn read_and_write() {
-        let mut ringbuf = super::RingByteBuffer::with_capacity(6);
+        let mut ring_buf = super::RingByteBuffer::with_capacity(6);
 
         let test_data = vec![1,2,3,4];
 
-        assert_eq!(ringbuf.write(&test_data[..]).unwrap(), 4);
-        assert_eq!(ringbuf.len(), 4);
-        assert_eq!(ringbuf.free_space(), 2);
+        assert_eq!(ring_buf.write(&test_data[..]).unwrap(), 4);
+        assert_eq!(ring_buf.len(), 4);
+        assert_eq!(ring_buf.free_space(), 2);
 
-        assert_eq!(ringbuf.write(&test_data[..]).unwrap(), 2);
-        assert_eq!(ringbuf.len(), 6);
-        assert_eq!(ringbuf.free_space(), 0);
+        assert_eq!(ring_buf.write(&test_data[..]).unwrap(), 2);
+        assert_eq!(ring_buf.len(), 6);
+        assert_eq!(ring_buf.free_space(), 0);
 
-        assert_eq!(ringbuf.current_read_slice(), [1, 2, 3, 4, 1, 2]);
+        assert_eq!(ring_buf.current_read_slice(), [1, 2, 3, 4, 1, 2]);
 
         let mut read_buf = [0; 5];
 
-        assert_eq!(ringbuf.read(&mut read_buf).unwrap(), 5);
+        assert_eq!(ring_buf.read(&mut read_buf).unwrap(), 5);
         assert_eq!(read_buf, [1, 2, 3, 4, 1]);
-        assert_eq!(ringbuf.len(), 1);
-        assert_eq!(ringbuf.free_space(), 5);
-        assert_eq!(ringbuf.read(&mut read_buf).unwrap(), 1);
+        assert_eq!(ring_buf.len(), 1);
+        assert_eq!(ring_buf.free_space(), 5);
+        assert_eq!(ring_buf.read(&mut read_buf).unwrap(), 1);
         assert_eq!(read_buf, [2, 2, 3, 4, 1]);
-        assert_eq!(ringbuf.len(), 0);
-        assert_eq!(ringbuf.free_space(), 6);
+        assert_eq!(ring_buf.len(), 0);
+        assert_eq!(ring_buf.free_space(), 6);
     }
 }

@@ -2,6 +2,7 @@ use super::ring_byte_buffer::RingByteBuffer;
 use super::prelude::*;
 use std::io;
 use std::time::{ Instant, Duration };
+use failure::{Error, Fail};
 
 const DEFAULT_CHANNEL_READ_BUFFER_SIZE: usize = 1024;
 
@@ -124,7 +125,7 @@ where
             }
         }
 
-        return Err(Error::OperationFail("operation failed".to_owned()));
+        return Err(RposError::OperationTimeout.into());
     }
 
     /// Write message to channel
