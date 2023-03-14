@@ -6,6 +6,8 @@ extern crate byteorder;
 extern crate crc;
 
 pub mod rpos_drv;
+pub use hex_slice;
+pub use serialport;
 
 mod answers;
 mod capsuled_parser;
