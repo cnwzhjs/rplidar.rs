@@ -8,9 +8,12 @@ use hex_slice::AsHex;
 use rplidar_drv::{Health, RplidarDevice, RplidarHostProtocol};
 use rpos_drv::{Channel, RposError};
 use serialport::prelude::*;
+use std::process::exit;
+use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
-use std::env;
+use std::{env, thread};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -127,7 +130,26 @@ fn main() {
 
     let start_time = std::time::Instant::now();
 
+    let should_stop = Arc::new(AtomicBool::new(false));
+
+    let should_stop_clone = Arc::clone(&should_stop);
+
+
+    ctrlc::set_handler(move || {
+        should_stop_clone.store(true, Ordering::Relaxed);
+        println!("received Ctrl+C!");
+        
+    })
+    .expect("Error setting Ctrl-C handler");
+
     loop {
+        if should_stop.load(Ordering::Relaxed) == true {
+            println!("Stopping motor; wait 3 seconds before process exit...");
+            rplidar.stop_motor().expect("failed to stop motor");
+            thread::sleep(Duration::from_millis(3000));
+            println!("Exit now");
+            exit(0);
+        }
         match rplidar.grab_scan() {
             Ok(scan) => {
                 println!("[{:6}s] {} points per scan", start_time.elapsed().as_secs(), scan.len());
@@ -148,7 +170,11 @@ fn main() {
                     continue;
                 } else {
                     println!("Error: {:?}", err);
-                    break;
+                    if err.to_string().eq("Interrupted system call") {
+                        continue;
+                    } else {
+                        break;    
+                    }
                 }
             }
         }
