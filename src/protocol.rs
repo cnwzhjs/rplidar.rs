@@ -80,8 +80,9 @@ impl RplidarHostProtocol {
             }
         } else {
             return Err(RposError::ProtocolError {
-                description: "sync byte status error".to_owned()
-            }.into());
+                description: "sync byte status error".to_owned(),
+            }
+            .into());
         }
     }
 
@@ -95,7 +96,10 @@ impl RplidarHostProtocol {
             self.decode_ans_header_metadata();
             if self.response_size == 0 {
                 if (self.ans_flag & RPLIDAR_ANS_PKTFLAG_LOOP) == RPLIDAR_ANS_PKTFLAG_LOOP {
-                    return Err(RposError::ProtocolError { description: "received loop answer with no response size".to_owned() }.into());
+                    return Err(RposError::ProtocolError {
+                        description: "received loop answer with no response size".to_owned(),
+                    }
+                    .into());
                 } else {
                     let answer = Ok((bytes_actual_read, Some(self.decoding_msg.clone())));
                     self.reset_decoder();
@@ -186,7 +190,10 @@ impl ProtocolEncoder for RplidarHostProtocol {
         }
 
         if msg.data.len() > 255 {
-            return Err(RposError::OperationFail { description: "payload too big".to_owned() }.into());
+            return Err(RposError::OperationFail {
+                description: "payload too big".to_owned(),
+            }
+            .into());
         }
 
         let cmd = if msg.data.len() != 0 {
@@ -218,7 +225,10 @@ impl ProtocolEncoder for RplidarHostProtocol {
     /// Estimate encoded message size (must be greater than or equal to the actual encoded size)
     fn estimate_encoded_size(&mut self, msg: &Message) -> Result<usize> {
         if msg.data.len() > 255 {
-            return Err(RposError::OperationFail { description: "payload too big".to_owned() }.into());
+            return Err(RposError::OperationFail {
+                description: "payload too big".to_owned(),
+            }
+            .into());
         }
 
         if msg.data.len() > 0 {
@@ -274,5 +284,4 @@ mod tests {
             [0xA5, 0x82, 0x05, 0, 0, 0, 0, 0, 0x22]
         );
     }
-
 }
