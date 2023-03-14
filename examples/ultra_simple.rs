@@ -7,10 +7,9 @@ use hex_slice::AsHex;
 
 use rplidar_drv::{Health, RplidarDevice, RplidarHostProtocol};
 use rpos_drv::{Channel, RposError};
-use serialport::prelude::*;
 use std::process::exit;
-use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::Arc;
 use std::time::Duration;
 
 use std::{env, thread};
@@ -25,27 +24,22 @@ fn main() {
     }
 
     let serial_port = &args[1];
-    let baud_rate = args.get(2).unwrap_or(&String::from("115200"))
+    let baud_rate = args
+        .get(2)
+        .unwrap_or(&String::from("115200"))
         .parse::<u32>()
         .expect("Invalid value for baudrate");
 
-    let s = SerialPortSettings {
-        baud_rate: baud_rate,
-        data_bits: DataBits::Eight,
-        flow_control: FlowControl::None,
-        parity: Parity::None,
-        stop_bits: StopBits::One,
-        timeout: Duration::from_millis(1),
-    };
-
-    let mut serial_port =
-        serialport::open_with_settings(serial_port, &s).expect("failed to open serial port");
+    let mut serial_port = serialport::new(serial_port, baud_rate)
+        .timeout(Duration::from_millis(100))
+        .open()
+        .expect("failed to open serial port");
 
     serial_port
         .write_data_terminal_ready(false)
         .expect("failed to clear DTR");
 
-    let channel = Channel::<RplidarHostProtocol, serialport::SerialPort>::new(
+    let channel = Channel::<RplidarHostProtocol, dyn serialport::SerialPort>::new(
         RplidarHostProtocol::new(),
         serial_port,
     );
@@ -111,10 +105,10 @@ fn main() {
         Ok(support) if support == true => {
             println!("Accessory board is detected and support motor control, starting motor...");
             rplidar.set_motor_pwm(600).expect("failed to start motor");
-        },
+        }
         Ok(_) => {
             println!("Accessory board is detected, but doesn't support motor control");
-        },
+        }
         Err(_) => {
             println!("Accessory board isn't detected");
         }
@@ -134,11 +128,9 @@ fn main() {
 
     let should_stop_clone = Arc::clone(&should_stop);
 
-
     ctrlc::set_handler(move || {
         should_stop_clone.store(true, Ordering::Relaxed);
         println!("received Ctrl+C!");
-        
     })
     .expect("Error setting Ctrl-C handler");
 
@@ -152,7 +144,11 @@ fn main() {
         }
         match rplidar.grab_scan() {
             Ok(scan) => {
-                println!("[{:6}s] {} points per scan", start_time.elapsed().as_secs(), scan.len());
+                println!(
+                    "[{:6}s] {} points per scan",
+                    start_time.elapsed().as_secs(),
+                    scan.len()
+                );
 
                 /*
                  for scan_point in scan {
@@ -173,7 +169,7 @@ fn main() {
                     if err.to_string().eq("Interrupted system call") {
                         continue;
                     } else {
-                        break;    
+                        break;
                     }
                 }
             }

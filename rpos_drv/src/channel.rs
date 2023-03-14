@@ -1,20 +1,19 @@
-use super::ring_byte_buffer::RingByteBuffer;
 use super::prelude::*;
+use super::ring_byte_buffer::RingByteBuffer;
 use std::io;
-use std::time::{ Instant, Duration };
-use failure::{Error, Fail};
+use std::time::{Duration, Instant};
 
 const DEFAULT_CHANNEL_READ_BUFFER_SIZE: usize = 1024;
 
 /// Channel encode and decode message with protocol, and send and receive bytes via stream
-/// 
+///
 /// # Examples
 /// ```ignore
 /// let mut channel = Channel::new(
 ///     RplidarProtocol::new(),
 ///     serial_port
 /// );
-/// 
+///
 /// channel.write(&Message::new(1)).unwrap();
 /// ```
 #[derive(Debug)]
@@ -27,10 +26,10 @@ pub struct Channel<P, T: ?Sized> {
 impl<P, T: ?Sized> Channel<P, T>
 where
     P: ProtocolDecoder + ProtocolEncoder,
-    T: io::Read + io::Write
+    T: io::Read + io::Write,
 {
     /// Create a new `Channel` to read and write messages
-    /// 
+    ///
     /// # Example
     /// ```ignore
     /// let channel = Channel::new(
@@ -43,7 +42,7 @@ where
     }
 
     /// Create a new `Channel` with non-default ring buffer capacity
-    /// 
+    ///
     /// # Example
     /// ```ignore
     /// let channel = Channel::with_read_buffer_size(
@@ -70,7 +69,7 @@ where
 
     /// Reset the channel status
     /// This function is usually used to reset protocol encoder and decoder when meet communication error
-    /// 
+    ///
     /// # Example
     /// ```ignore
     /// match channel.invoke(&Message::new(1), Duration::from_secs(1)) {
@@ -84,7 +83,7 @@ where
     }
 
     /// Read message from channel
-    /// 
+    ///
     /// # Example
     /// ```ignore
     /// if let Some(msg) = channel.read().unwrap() {
@@ -111,7 +110,7 @@ where
     }
 
     /// Read message until timeout
-    /// 
+    ///
     /// # Example
     /// ```ignore
     /// channel.read_until(Duration::from_secs(1));
@@ -129,26 +128,25 @@ where
     }
 
     /// Write message to channel
-    /// 
+    ///
     /// # Example
     /// ```ignore
     /// channel.write(&Message::new(1)).unwrap();
     /// ```
-    pub fn write(&mut self, msg:&Message) -> Result<usize> {
+    pub fn write(&mut self, msg: &Message) -> Result<usize> {
         let written = self.protocol.write_to(msg, &mut self.stream)?;
         self.stream.flush()?;
         return Ok(written);
     }
 
     /// Send a request to channel and wait for response
-    /// 
+    ///
     /// # Example
     /// ```ignore
     /// let resp = channel.invoke(&Message::new(1), Duration::from_secs(1));
     /// ```
-    pub fn invoke(&mut self, request:&Message, timeout: Duration) -> Result<Option<Message>> {
+    pub fn invoke(&mut self, request: &Message, timeout: Duration) -> Result<Option<Message>> {
         self.write(request)?;
         return self.read_until(timeout);
     }
-    
 }

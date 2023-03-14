@@ -9,7 +9,7 @@ pub struct Message {
     pub cmd: u8,
 
     /// Payload data
-    pub data: Vec<u8>
+    pub data: Vec<u8>,
 }
 
 impl Message {
@@ -20,10 +20,10 @@ impl Message {
     pub fn with_data(cmd: u8, data: &[u8]) -> Message {
         let mut msg = Message {
             cmd: cmd,
-            data: Vec::with_capacity(data.len())
+            data: Vec::with_capacity(data.len()),
         };
 
-        msg.data.extend_from_slice(&data);
+        msg.data.extend_from_slice(data);
 
         return msg;
     }
