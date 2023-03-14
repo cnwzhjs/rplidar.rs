@@ -21,17 +21,10 @@ path = "src/lib.rs"
 rpos_drv = "0.2.0"
 byteorder = "1.2.7"
 crc = "1.8.1"
+failure = "0.1.5"
 
 [dev-dependencies]
 hex-slice = "0.1.4"
 serialport = "4.2.0"
 ctrlc = "3.2.5"
 
-[workspace]
-members = [
-    ".",
-    "rpos_drv",
-]
-
-[patch.crates-io]
-rpos_drv = { path = "rpos_drv" }
