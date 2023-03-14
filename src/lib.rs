@@ -4,7 +4,8 @@
 
 extern crate byteorder;
 extern crate crc;
-extern crate rpos_drv;
+
+pub mod rpos_drv;
 
 mod answers;
 mod capsuled_parser;

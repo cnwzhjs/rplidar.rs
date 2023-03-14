@@ -1,6 +1,6 @@
 use super::checksum::Checksum;
+use crate::rpos_drv::{Message, ProtocolDecoder, ProtocolEncoder};
 use byteorder::{ByteOrder, LittleEndian};
-use rpos_drv::{Message, ProtocolDecoder, ProtocolEncoder};
 use std::cmp::min;
 use std::io::Write;
 
@@ -256,7 +256,7 @@ impl ProtocolEncoder for RplidarHostProtocol {
 #[cfg(test)]
 mod tests {
 
-    use rpos_drv::{Message, ProtocolEncoder, Result};
+    use crate::rpos_drv::{Message, ProtocolEncoder, Result};
 
     fn encode<T: ProtocolEncoder>(protocol: &mut T, msg: &Message) -> Result<Vec<u8>> {
         let encoded_bytes = protocol.estimate_encoded_size(&msg)?;

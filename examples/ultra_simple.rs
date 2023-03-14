@@ -1,12 +1,11 @@
 extern crate hex_slice;
 extern crate rplidar_drv;
-extern crate rpos_drv;
 extern crate serialport;
 
 use hex_slice::AsHex;
 
+use crate::rplidar_drv::rpos_drv::{Channel, RposError};
 use rplidar_drv::{Health, RplidarDevice, RplidarHostProtocol};
-use rpos_drv::{Channel, RposError};
 use std::process::exit;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
