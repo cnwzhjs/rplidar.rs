@@ -135,10 +135,11 @@ pub fn parse_ultra_capsuled(cached_prev: &CachedPrevCapsule, nodes: RplidarRespo
         let mut cur_angle_raw_q16 = prev_start_angle_q8 << 8;
 
         let (mut cur_major, mut cur_predict1, mut cur_predict2) = parse_cabin(prev_capsule.ultra_cabins[0]);
-        let cabin_count = unsafe { prev_capsule.ultra_cabins.len() };
+        
+        const CABIN_COUNT: usize = 32;
 
-        for i in 0..cabin_count {
-            let next_cabin = if i == cabin_count-1 {
+        for i in 0..CABIN_COUNT {
+            let next_cabin = if i == CABIN_COUNT-1 {
                 nodes.ultra_cabins[0]
             } else {
                 prev_capsule.ultra_cabins[i + 1]

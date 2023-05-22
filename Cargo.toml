@@ -22,12 +22,18 @@ rpos_drv = "0.2.0"
 byteorder = "1.2.7"
 crc = "1.8.1"
 
+[dev-dependencies]
+hex-slice = "0.1.4"
+serialport = { version = "4.2.0", default-features = false, features = [] }
+
+
 [workspace]
 members = [
-    ".",
     "rpos_drv",
-    "examples/ultra_simple"
+    "examples/*",
 ]
+resolver = "2"
 
 [patch.crates-io]
 rpos_drv = { path = "rpos_drv" }
+
