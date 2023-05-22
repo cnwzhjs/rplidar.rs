@@ -204,7 +204,7 @@ impl ProtocolEncoder for RplidarHostProtocol {
         bytes[0] = RPLIDAR_CMD_SYNC_BYTE;
         bytes[1] = cmd;
 
-        if msg.data.is_empty() {
+        if !msg.data.is_empty() {
             let mut checksum = Checksum::new();
 
             checksum.push_slice(&bytes[0..2]);
