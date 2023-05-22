@@ -30,7 +30,7 @@ use self::checksum::Checksum;
 use self::cmds::*;
 pub use self::protocol::RplidarHostProtocol;
 use byteorder::{ByteOrder, LittleEndian};
-use rpos_drv::{Channel, Message, Result};
+pub use rpos_drv::{Channel, Message, Result};
 use std::collections::VecDeque;
 use std::io::{Read, Write};
 use std::mem::transmute_copy;

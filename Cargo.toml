@@ -18,8 +18,9 @@ name = "rplidar_drv"
 path = "src/lib.rs"
 
 [dependencies]
-rpos_drv = "0.2.0"
+# rpos_drv = "0.2.0"
 byteorder = "1.2.7"
+rpos_drv = { path = "rpos_drv" }
 crc = "1.8.1"
 
 [dev-dependencies]
