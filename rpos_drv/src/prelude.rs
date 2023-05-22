@@ -14,18 +14,18 @@ pub struct Message {
 
 impl Message {
     pub fn new(cmd: u8) -> Message {
-        return Message::with_data(cmd, &[]);
+        Message::with_data(cmd, &[])
     }
 
     pub fn with_data(cmd: u8, data: &[u8]) -> Message {
         let mut msg = Message {
-            cmd: cmd,
+            cmd,
             data: Vec::with_capacity(data.len())
         };
 
-        msg.data.extend_from_slice(&data);
+        msg.data.extend_from_slice(data);
 
-        return msg;
+        msg
     }
 }
 

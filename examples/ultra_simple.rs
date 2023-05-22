@@ -7,7 +7,6 @@ use hex_slice::AsHex;
 
 use rplidar_drv::{Health, RplidarDevice, RplidarHostProtocol};
 use rpos_drv::{Channel, RposError};
-use serialport::prelude::*;
 use std::time::Duration;
 
 use std::env;
@@ -26,23 +25,21 @@ fn main() {
         .parse::<u32>()
         .expect("Invalid value for baudrate");
 
-    let s = SerialPortSettings {
-        baud_rate: baud_rate,
-        data_bits: DataBits::Eight,
-        flow_control: FlowControl::None,
-        parity: Parity::None,
-        stop_bits: StopBits::One,
-        timeout: Duration::from_millis(1),
-    };
+    let mut serial_port = serialport::new(serial_port, baud_rate)
+    .data_bits(serialport::DataBits::Eight)
+    .flow_control(serialport::FlowControl::None)
+    .parity(serialport::Parity::None)
+    .stop_bits(serialport::StopBits::One)
+        .timeout(Duration::from_millis(100))
+        .open()
+        .expect("failed to open serial port");
 
-    let mut serial_port =
-        serialport::open_with_settings(serial_port, &s).expect("failed to open serial port");
 
     serial_port
         .write_data_terminal_ready(false)
         .expect("failed to clear DTR");
 
-    let channel = Channel::<RplidarHostProtocol, serialport::SerialPort>::new(
+    let channel = Channel::<RplidarHostProtocol, dyn serialport::SerialPort>::new(
         RplidarHostProtocol::new(),
         serial_port,
     );

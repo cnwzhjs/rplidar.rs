@@ -30,22 +30,26 @@ impl RingByteBuffer {
 
     /// the data in the ring buffer
     pub fn len(&self) -> usize {
-        return self.size;
+        self.size
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.size == 0
     }
 
     /// the capacity of the ring buffer
     pub fn capacity(&self) -> usize {
-        return self.buf.len();
+        self.buf.len()
     }
 
     /// free space in bytes in the ring buffer
     pub fn free_space(&self) -> usize {
-        return self.buf.len() - self.size;
+        self.buf.len() - self.size
     }
 
     /// current tail index of the ring buffer
     fn tail(&self) -> usize {
-        return (self.head + self.size) % self.buf.len();
+        (self.head + self.size) % self.buf.len()
     }
 
     /// current read slice
@@ -61,7 +65,7 @@ impl RingByteBuffer {
     /// ```
     pub fn current_read_slice(&self) -> &[u8] {
         let end = min(self.head+self.size, self.buf.len());
-        return &self.buf[self.head..end];
+        &self.buf[self.head..end]
     }
 
     /// skip bytes
@@ -69,14 +73,14 @@ impl RingByteBuffer {
         let skipped = min(self.size, bytes);
         self.head = (self.head + skipped) % self.buf.len();
         self.size -= skipped;
-        return skipped;
+        skipped
     }
 
     /// current write slice
     fn current_write_slice(&mut self) -> &mut[u8] {
         let current_end = self.tail();
         let write_buf_end = min(self.buf.len(), current_end + self.free_space());
-        return &mut self.buf[current_end..write_buf_end];
+        &mut self.buf[current_end..write_buf_end]
     }
 
     /// mark bytes as written
@@ -86,7 +90,7 @@ impl RingByteBuffer {
     }
 
     fn partial_read_from(&mut self, upstream: &mut impl Read) -> std::io::Result<usize> {
-        if self.current_write_slice().len() == 0 {
+        if self.current_write_slice().is_empty() {
             return Ok(0);
         }
 
@@ -145,7 +149,7 @@ impl Read for RingByteBuffer {
         };
         self.skip_bytes(latter_read);
 
-        return Ok(read + latter_read);
+        Ok(read + latter_read)
     }
 }
 
@@ -167,7 +171,7 @@ impl Write for RingByteBuffer {
         };
         self.mark_bytes_as_written(latter_written);
 
-        return Ok(written + latter_written);
+        Ok(written + latter_written)
     }
 
     fn flush(&mut self) -> std::io::Result<()> {
