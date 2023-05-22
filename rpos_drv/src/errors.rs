@@ -1,4 +1,3 @@
-use std::error;
 pub use failure::{ Fail, Error };
 
 #[derive(Fail, Debug)]

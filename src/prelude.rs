@@ -13,7 +13,7 @@ pub struct ScanPoint {
 
 impl ScanPoint {
     pub fn angle(&self) -> f32 {
-        return (self.angle_z_q14 as f32) / 16384f32 / 2f32 * PI;
+        (self.angle_z_q14 as f32) / 16384f32 / 2f32 * PI
     }
 
     pub fn set_angle(&mut self, angle:f32) {
@@ -21,7 +21,7 @@ impl ScanPoint {
     }
 
     pub fn distance(&self) -> f32 {
-        return (self.dist_mm_q2 as f32) / 4000f32;
+        (self.dist_mm_q2 as f32) / 4000f32
     }
 
     pub fn set_distance(&mut self, dist: f32) {
@@ -29,11 +29,11 @@ impl ScanPoint {
     }
 
     pub fn is_sync(&self) -> bool {
-        return (self.flag & RPLIDAR_RESP_HQ_FLAG_SYNCBIT) == RPLIDAR_RESP_HQ_FLAG_SYNCBIT;
+        (self.flag & RPLIDAR_RESP_HQ_FLAG_SYNCBIT) == RPLIDAR_RESP_HQ_FLAG_SYNCBIT
     }
 
     pub fn is_valid(&self) -> bool {
-        return self.quality != 0 && self.dist_mm_q2 != 0;
+        self.quality != 0 && self.dist_mm_q2 != 0
     }
 }
 
@@ -91,14 +91,7 @@ pub struct ScanOptions {
 }
 
 impl ScanOptions {
-    /// default options
-    pub fn default() -> ScanOptions {
-        ScanOptions {
-            scan_mode: None,
-            force_scan: false,
-            options: 0,
-        }
-    }
+   
 
     /// with specific mode
     pub fn with_mode(scan_mode: u16) -> ScanOptions {
@@ -123,6 +116,17 @@ impl ScanOptions {
         ScanOptions {
             scan_mode: Some(scan_mode),
             force_scan: true,
+            options: 0,
+        }
+    }
+}
+
+impl Default for ScanOptions {
+     /// default options
+     fn default() -> ScanOptions {
+        ScanOptions {
+            scan_mode: None,
+            force_scan: false,
             options: 0,
         }
     }

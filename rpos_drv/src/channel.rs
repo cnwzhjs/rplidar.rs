@@ -2,7 +2,6 @@ use super::ring_byte_buffer::RingByteBuffer;
 use super::prelude::*;
 use std::io;
 use std::time::{ Instant, Duration };
-use failure::{Error, Fail};
 
 const DEFAULT_CHANNEL_READ_BUFFER_SIZE: usize = 1024;
 
@@ -58,14 +57,14 @@ where
         read_buffer_size: usize,
     ) -> Channel<P, T> {
         let mut chn = Channel {
-            protocol: protocol,
-            stream: stream,
+            protocol,
+            stream,
             read_buffer: RingByteBuffer::with_capacity(read_buffer_size),
         };
 
         chn.reset();
 
-        return chn;
+        chn
     }
 
     /// Reset the channel status
@@ -104,7 +103,7 @@ where
                 return Ok(Option::None);
             }
 
-            if let Some(_) = msg {
+            if msg.is_some() {
                 return Ok(msg);
             }
         }
@@ -125,7 +124,7 @@ where
             }
         }
 
-        return Err(RposError::OperationTimeout.into());
+        Err(RposError::OperationTimeout.into())
     }
 
     /// Write message to channel
@@ -137,7 +136,7 @@ where
     pub fn write(&mut self, msg:&Message) -> Result<usize> {
         let written = self.protocol.write_to(msg, &mut self.stream)?;
         self.stream.flush()?;
-        return Ok(written);
+        Ok(written)
     }
 
     /// Send a request to channel and wait for response
@@ -148,7 +147,7 @@ where
     /// ```
     pub fn invoke(&mut self, request:&Message, timeout: Duration) -> Result<Option<Message>> {
         self.write(request)?;
-        return self.read_until(timeout);
+        self.read_until(timeout)
     }
     
 }
